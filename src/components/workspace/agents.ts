@@ -1,9 +1,30 @@
+import {
+  AlertTriangle,
+  Calendar,
+  Clock,
+  Eye,
+  FilePen,
+  FileSearch,
+  FileSpreadsheet,
+  FileText,
+  Image,
+  LayoutList,
+  Paintbrush,
+  Palette,
+  PieChart,
+  Scale,
+  Shield,
+  TrendingUp,
+} from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+
+
 export interface Agent {
   id: string
   name: string
   role: string
   description: string
-  initials: string
+  emoji: string
   accentColor: string
 }
 
@@ -14,7 +35,7 @@ export const AGENTS: Array<Agent> = [
     role: 'Executive Operations',
     description:
       'Coordinates priorities, tracks deadlines, and keeps your business running smoothly across every department.',
-    initials: 'CS',
+    emoji: '🧭',
     accentColor: 'bg-chart-2',
   },
   {
@@ -23,7 +44,7 @@ export const AGENTS: Array<Agent> = [
     role: 'Brand & Visual',
     description:
       'Creates visual assets, refines brand identity, and ensures every customer touchpoint looks intentional.',
-    initials: 'DE',
+    emoji: '🎨',
     accentColor: 'bg-chart-3',
   },
   {
@@ -32,7 +53,7 @@ export const AGENTS: Array<Agent> = [
     role: 'Financial Operations',
     description:
       'Monitors cash flow, prepares reports, and flags financial risks before they become problems.',
-    initials: 'FI',
+    emoji: '📊',
     accentColor: 'bg-chart-4',
   },
   {
@@ -41,7 +62,7 @@ export const AGENTS: Array<Agent> = [
     role: 'Legal & Compliance',
     description:
       'Reviews contracts, tracks regulatory requirements, and ensures the business stays protected.',
-    initials: 'LE',
+    emoji: '⚖️',
     accentColor: 'bg-chart-5',
   },
 ]
@@ -156,26 +177,6 @@ Careful, qualifying, and risk-aware — but actionable. You don't hide behind "i
 
 You know the current contracts cold. You know the Clearfield DPA is the most pressing item. You're watching the 2 contractor IP assignments — if either contractor contributes to the core product and the assignment isn't signed, that's a cap table risk.`,
 }
-
-import type { LucideIcon } from 'lucide-react'
-import {
-  AlertTriangle,
-  Calendar,
-  Clock,
-  Eye,
-  FilePen,
-  FileSearch,
-  FileSpreadsheet,
-  FileText,
-  Image,
-  LayoutList,
-  Paintbrush,
-  Palette,
-  PieChart,
-  Scale,
-  Shield,
-  TrendingUp,
-} from 'lucide-react'
 
 export interface Suggestion {
   text: string

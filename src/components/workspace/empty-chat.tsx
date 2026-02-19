@@ -1,8 +1,9 @@
+import { AGENT_SUGGESTIONS } from './agents'
 import type { Agent } from './agents'
 
+import { PromptSuggestion } from '@/components/prompt-kit/prompt-suggestion'
 import { cn } from '@/lib/utils'
 
-import { AGENT_SUGGESTIONS } from './agents'
 
 interface EmptyChatProps {
   agent: Agent
@@ -18,11 +19,11 @@ export function EmptyChat({ agent, onSuggestionClick }: EmptyChatProps) {
       <div className="mb-6">
         <div
           className={cn(
-            'text-primary-foreground mb-4 flex size-14 items-center justify-center rounded-2xl text-base font-semibold',
+            'mb-4 flex size-14 items-center justify-center rounded-2xl text-3xl',
             agent.accentColor,
           )}
         >
-          {agent.initials}
+          {agent.emoji}
         </div>
         <h2 className="text-foreground mb-0.5 text-xl font-bold">
           {agent.name}
@@ -39,18 +40,16 @@ export function EmptyChat({ agent, onSuggestionClick }: EmptyChatProps) {
       {suggestions.length > 0 && (
         <div className="grid grid-cols-2 gap-2">
           {suggestions.map(({ text, icon: Icon }) => (
-            <button
+            <PromptSuggestion
               key={text}
-              type="button"
+              variant="outline"
+              size="default"
               onClick={() => onSuggestionClick(text)}
-              className={cn(
-                'border-border hover:bg-accent text-foreground/70 hover:text-foreground',
-                'flex flex-col items-start gap-2 rounded-lg border p-3 text-left text-sm transition-colors',
-              )}
+              className="text-foreground/70 hover:text-foreground h-auto flex-col items-start gap-2 rounded-lg p-3 text-left text-sm"
             >
               <Icon className="text-muted-foreground size-4 shrink-0" />
               <span className="line-clamp-2 leading-snug">{text}</span>
-            </button>
+            </PromptSuggestion>
           ))}
         </div>
       )}
