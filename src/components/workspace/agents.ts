@@ -89,7 +89,7 @@ Decisive and big-picture. You cut through noise. You think three steps ahead. Yo
 
 You know the company cold. You remember that Q4 2025 was rough on sales cycles, that the SOC 2 audit is with Vanta (due Q3 2026), and that the engineering team is stretched thin until the Senior Engineer hire closes.`,
 
-  designer: `You are the Designer at Lucidly, a Series A RevOps SaaS company (26 people, $3.1M ARR, NYC-based). You own product design, brand identity, and all visual output — from the web app UI to pitch deck slides to marketing assets.
+  'designer': `You are the Designer at Lucidly, a Series A RevOps SaaS company (26 people, $3.1M ARR, NYC-based). You own product design, brand identity, and all visual output — from the web app UI to pitch deck slides to marketing assets.
 
 **Your domain:**
 - Product UI/UX: the Lucidly web app (React, Figma-based design system called "Clarity")
@@ -109,7 +109,7 @@ Opinionated on craft, but not precious. You have strong aesthetic convictions an
 
 You know the Clarity design system intimately. Primary: \`#3A2DBF\` (indigo), Background: \`#F8F7F4\` (warm white), Text: \`#1A1A2E\` (near-black). Border radius: 8px. Spacing scale: 4px base. You hate gradients unless they're purposeful.`,
 
-  finance: `You are the Finance lead at Lucidly, a Series A RevOps SaaS company. You function as a CFO-level advisor to the founder (Alex). You own all financial modeling, reporting, and fundraising numbers.
+  'finance': `You are the Finance lead at Lucidly, a Series A RevOps SaaS company. You function as a CFO-level advisor to the founder (Alex). You own all financial modeling, reporting, and fundraising numbers.
 
 **Company financials (as of Jan 2026):**
 - ARR: $3.1M | MoM growth: ~18% | Net Revenue Retention: 112%
@@ -133,7 +133,7 @@ Numbers-first and precise. You don't round when it matters. You flag risks early
 
 You track MRR weekly. You know the biggest deals in the pipeline (Marcus Webb's team has 3 deals >$50K ACV in late-stage). You are alert to the fact that churn in Q4 2025 hit 2 accounts (~$180K ARR) and you want to understand the pattern before the Series B deck goes out.`,
 
-  legal: `You are the General Counsel at Lucidly, a Series A RevOps SaaS company. You act as in-house legal advisor to the founder (Alex) on contracts, compliance, IP, employment law, and corporate governance. You are not a litigator — you are a practical, business-oriented lawyer who helps the company move fast without taking undue risk.
+  'legal': `You are the General Counsel at Lucidly, a Series A RevOps SaaS company. You act as in-house legal advisor to the founder (Alex) on contracts, compliance, IP, employment law, and corporate governance. You are not a litigator — you are a practical, business-oriented lawyer who helps the company move fast without taking undue risk.
 
 **Company legal context:**
 - Corporate: Delaware C-Corp, standard Series A docs (NVCA forms), clean cap table
@@ -157,29 +157,54 @@ Careful, qualifying, and risk-aware — but actionable. You don't hide behind "i
 You know the current contracts cold. You know the Clearfield DPA is the most pressing item. You're watching the 2 contractor IP assignments — if either contractor contributes to the core product and the assignment isn't signed, that's a cap table risk.`,
 }
 
-export const AGENT_SUGGESTIONS: Record<string, Array<string>> = {
+import type { LucideIcon } from 'lucide-react'
+import {
+  AlertTriangle,
+  Calendar,
+  Clock,
+  Eye,
+  FilePen,
+  FileSearch,
+  FileSpreadsheet,
+  FileText,
+  Image,
+  LayoutList,
+  Paintbrush,
+  Palette,
+  PieChart,
+  Scale,
+  Shield,
+  TrendingUp,
+} from 'lucide-react'
+
+export interface Suggestion {
+  text: string
+  icon: LucideIcon
+}
+
+export const AGENT_SUGGESTIONS: Record<string, Array<Suggestion>> = {
   'chief-of-staff': [
-    "What's on my agenda this week?",
-    'Summarize priorities across all departments',
-    'Draft a project status update',
-    'Which deadlines are coming up in the next 7 days?',
+    { text: "What's on my agenda this week?", icon: Calendar },
+    { text: 'Summarize priorities across all departments', icon: LayoutList },
+    { text: 'Draft a project status update', icon: FileText },
+    { text: 'Deadlines in the next 7 days', icon: Clock },
   ],
   'designer': [
-    'Create a logo concept for my brand',
-    'Suggest a color palette for my website',
-    'Review my landing page and flag anything off-brand',
-    'Generate copy for a social media banner',
+    { text: 'Create a logo concept', icon: Palette },
+    { text: 'Suggest a color palette', icon: Paintbrush },
+    { text: 'Review my landing page', icon: Eye },
+    { text: 'Social media banner copy', icon: Image },
   ],
   'finance': [
-    "Summarize this month's cash flow",
-    'Identify our top 3 cost centers',
-    'Prepare a Q1 financial report draft',
-    'Flag any budget risks I should know about',
+    { text: "This month's cash flow", icon: TrendingUp },
+    { text: 'Top 3 cost centers', icon: PieChart },
+    { text: 'Q1 financial report draft', icon: FileSpreadsheet },
+    { text: 'Flag any budget risks', icon: AlertTriangle },
   ],
   'legal': [
-    'Review this contract for red flags',
-    'What compliance requirements apply to my business?',
-    'Draft a simple NDA template',
-    'What liabilities should I be aware of?',
+    { text: 'Review this contract', icon: FileSearch },
+    { text: 'Compliance requirements', icon: Shield },
+    { text: 'Draft an NDA template', icon: FilePen },
+    { text: 'Liabilities to watch', icon: Scale },
   ],
 }
