@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Documentation Lookup
+
+- **TanStack (Router, Start, Query, Table, Form):** Use `mcp__tanstack__tanstack_search_docs` or `mcp__tanstack__tanstack_doc` — prefer this over context7 for anything TanStack-related
+- **All other libraries:** Use `mcp__context7__resolve-library-id` first, then `mcp__context7__query-docs`
+
+---
+
 ## Project Overview
 
 0hire prototype — a hiring/recruiting dashboard UI. Currently a UI mockup (no backend, all data is hardcoded).
@@ -68,9 +75,22 @@ No test framework is configured.
 
 ## Fonts
 
-| Variable | Font | Source |
-|---|---|---|
+| Variable      | Font           | Source                       |
+| ------------- | -------------- | ---------------------------- |
 | `--font-sans` | Inter Variable | `@fontsource-variable/inter` |
+
+## GSD + Design Skills
+
+When executing or planning any GSD phase that touches UI or frontend files, automatically invoke the following skills as part of the workflow:
+
+- `frontend-design` — for component and page-level design quality
+- `interface-design` — for design system consistency (spacing, depth, color, patterns)
+- `vercel-react-best-practices` — for React/TanStack performance patterns
+- `web-design-guidelines` — for accessibility and UX compliance
+
+Apply these proactively during `gsd:plan-phase`, `gsd:execute-phase`, `gsd:verify-work`, and any task that writes or modifies `.tsx`, `.ts`, or `.css` files under `src/`.
+
+---
 
 ## Code Style
 

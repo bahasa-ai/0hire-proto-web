@@ -10,11 +10,11 @@
 
 Three options for storing which agent channel is active:
 
-| Approach | How it works | Pros | Cons |
-|----------|--------------|-----|-----|
-| **React state** | `useState(agentId)` in nearest common ancestor | Simple, no URL coupling, minimal code | No deep links, no back/forward, state lost on refresh |
-| **URL search params** | `?agent=chief-of-staff` via TanStack Router `validateSearch` + `useSearch` | Deep links, shareable URLs, back/forward works | More setup, URL coupling from day one |
-| **URL path params** | `/agent/chief-of-staff` via dynamic route segment | Clean URLs, true routing | Requires layout route restructure, more files |
+| Approach              | How it works                                                               | Pros                                           | Cons                                                  |
+| --------------------- | -------------------------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------------------- |
+| **React state**       | `useState(agentId)` in nearest common ancestor                             | Simple, no URL coupling, minimal code          | No deep links, no back/forward, state lost on refresh |
+| **URL search params** | `?agent=chief-of-staff` via TanStack Router `validateSearch` + `useSearch` | Deep links, shareable URLs, back/forward works | More setup, URL coupling from day one                 |
+| **URL path params**   | `/agent/chief-of-staff` via dynamic route segment                          | Clean URLs, true routing                       | Requires layout route restructure, more files         |
 
 **Recommendation for Phase 1: React state (`useState`)**
 
@@ -41,15 +41,15 @@ src/routes/index.tsx                    (thin route wrapper)
 
 ### Files to create / modify
 
-| File | Export | Responsibility |
-|------|--------|----------------|
-| `src/components/workspace/agents.ts` | `AGENTS`, `Agent`, `DEFAULT_AGENT_ID`, `CURRENT_USER` | Hardcoded data, pure TS |
-| `src/components/workspace/workspace-layout.tsx` | `WorkspaceLayout` | Owns `activeAgentId` state, composes sidebar + main |
-| `src/components/workspace/workspace-sidebar.tsx` | `WorkspaceSidebar` | Props: `agents`, `activeId`, `onSelect` |
-| `src/components/workspace/agent-channel-item.tsx` | `AgentChannelItem` | Props: `agent`, `isActive`, `onSelect` |
-| `src/components/workspace/workspace-main.tsx` | `WorkspaceMain` | Props: `activeAgent` |
-| `src/components/workspace/channel-header.tsx` | `ChannelHeader` | Props: `agent` |
-| `src/routes/index.tsx` | (modified) | Render `<WorkspaceLayout />` instead of placeholder |
+| File                                              | Export                                                | Responsibility                                      |
+| ------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------- |
+| `src/components/workspace/agents.ts`              | `AGENTS`, `Agent`, `DEFAULT_AGENT_ID`, `CURRENT_USER` | Hardcoded data, pure TS                             |
+| `src/components/workspace/workspace-layout.tsx`   | `WorkspaceLayout`                                     | Owns `activeAgentId` state, composes sidebar + main |
+| `src/components/workspace/workspace-sidebar.tsx`  | `WorkspaceSidebar`                                    | Props: `agents`, `activeId`, `onSelect`             |
+| `src/components/workspace/agent-channel-item.tsx` | `AgentChannelItem`                                    | Props: `agent`, `isActive`, `onSelect`              |
+| `src/components/workspace/workspace-main.tsx`     | `WorkspaceMain`                                       | Props: `activeAgent`                                |
+| `src/components/workspace/channel-header.tsx`     | `ChannelHeader`                                       | Props: `agent`                                      |
+| `src/routes/index.tsx`                            | (modified)                                            | Render `<WorkspaceLayout />` instead of placeholder |
 
 ### Data flow
 
@@ -94,8 +94,8 @@ For Phase 1: 4 agents under an "Agents" label, user footer with initials + name 
 ```tsx
 <span
   className={cn(
-    'flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold text-primary-foreground',
-    agent.accentColor  // e.g. 'bg-chart-4'
+    'text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold',
+    agent.accentColor, // e.g. 'bg-chart-4'
   )}
 >
   {agent.initials}
@@ -110,11 +110,11 @@ Store `accentColor` as a Tailwind class string in the agent data (e.g. `'bg-char
 
 Use sidebar semantic tokens:
 
-| State | Background | Text |
-|-------|------------|------|
-| Active | `bg-sidebar-primary` | `text-sidebar-primary-foreground` |
-| Inactive hover | `bg-sidebar-accent` | `text-sidebar-accent-foreground` |
-| Inactive default | (transparent) | `text-sidebar-foreground` |
+| State            | Background           | Text                              |
+| ---------------- | -------------------- | --------------------------------- |
+| Active           | `bg-sidebar-primary` | `text-sidebar-primary-foreground` |
+| Inactive hover   | `bg-sidebar-accent`  | `text-sidebar-accent-foreground`  |
+| Inactive default | (transparent)        | `text-sidebar-foreground`         |
 
 **Implementation with `cn()`:**
 
@@ -171,7 +171,7 @@ export interface Agent {
   role: string
   description: string
   initials: string
-  accentColor: string  // Tailwind class, e.g. 'bg-chart-4'
+  accentColor: string // Tailwind class, e.g. 'bg-chart-4'
 }
 ```
 
@@ -203,7 +203,9 @@ Keep `agents.ts` as pure TypeScript — no JSX, no React imports.
 
 ```tsx
 const searchSchema = z.object({
-  agent: z.enum(['chief-of-staff', 'designer', 'finance', 'legal']).catch('chief-of-staff'),
+  agent: z
+    .enum(['chief-of-staff', 'designer', 'finance', 'legal'])
+    .catch('chief-of-staff'),
 })
 
 export const Route = createFileRoute('/')({
@@ -224,7 +226,7 @@ const activeAgent = AGENTS.find(a => a.id === agent) ?? AGENTS[0]
 ```tsx
 const navigate = useNavigate()
 // On agent click:
-navigate({ search: (prev) => ({ ...prev, agent: agentId }) })
+navigate({ search: prev => ({ ...prev, agent: agentId }) })
 ```
 
 **Phase 2 (path params):** Use `src/routes/agent.$agentId.tsx` and a layout route for `/agent/:agentId`. Requires moving sidebar into a layout component.

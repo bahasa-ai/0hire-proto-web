@@ -2,84 +2,85 @@
 
 ## What This Is
 
-A Slack-like workspace UI for 0hire AI agents — a web app where small business operators can chat with specialized AI employees (Chief of Staff, Designer, Finance, Legal) and see what those agents are working on in real time. Built on top of the existing 0hire prototype using TanStack Start + React 19, with real Claude API responses via Anthropic SDK server functions.
+A Slack-like workspace UI for 0hire AI agents. Non-technical small business operators chat with specialized AI employees (Chief of Staff, Designer, Finance, Legal) and see what those agents are working on in real time.
 
-## Core Value
+Built on TanStack Start + React 19 with real Claude API responses via Anthropic SDK server functions. Chat UI components from **prompt-kit** (https://www.prompt-kit.com) — purpose-built for AI interfaces.
 
-A non-technical business owner can talk to their AI team and always know what it's doing — solving the "black box problem" through a familiar chat + task board interface.
+## Core Value Proposition
 
-## Requirements
+Solve the **black box problem** (RFC-0003, §1.6 finding #7): users don't know what their agents can do, are doing, or have done. The workspace makes agent activity visible and the interaction model familiar — like texting a helpful assistant, not configuring a system.
 
-### Validated
+## Design Vision
 
-- ✓ TanStack Start + React 19 + TypeScript project scaffolded — existing
-- ✓ shadcn `base-nova` component library with @base-ui/react — existing
-- ✓ Tailwind CSS v4 with OKLCH semantic color tokens — existing
-- ✓ File-based TanStack Router — existing
+Mental model: **Slack for your AI team** — familiar sidebar + channel switching, but each "channel" is a specialized AI employee. The agent task board (like Slack threads) shows what's being worked on without needing to ask.
 
-### Active
+Key UX principles from RFC-0003:
 
-- [ ] Slack-like sidebar with 4 agent channels (Chief of Staff, Designer, Finance, Legal)
-- [ ] Full chat conversation view with multi-agent message history per channel
-- [ ] Real Claude API integration — agents actually respond via Anthropic SDK server functions
-- [ ] Streaming message responses (token-by-token display)
-- [ ] Per-agent to-do list board (Scheduled, In Progress, Needs Input, Done, Failed)
-- [ ] Agent profiles (name, role, brief description shown in channel header)
-- [ ] Prompt-kit UI components for chat input and message bubbles
-- [ ] Mock task data seeded per agent to demonstrate the board UX
-- [ ] Agent system prompts per role (Chief of Staff, Designer, Finance, Legal personas)
-- [ ] Hardcoded user identity (no auth — prototype only)
+- **Chat-first**: Day 1 feels like texting a helpful assistant
+- **Transparency**: Agent task board solves the black box problem
+- **Progressive disclosure**: Chat is simple on day 1; task board and capabilities reveal over time
+- **Per-agent to-do list** (not Kanban): RFC-0003 decision (2026-02-19) — normie target users don't know what Kanban is
 
-### Out of Scope
+## Agent Model
 
-- File Browser / Zero Drive — deferred to v2; focus is chat + task board first
-- Authentication / user accounts — prototype, no auth needed
-- Multi-user / real-time collaboration — single user only
-- SOP authoring wizard — deferred; the RFC hero feature, but requires more design work
-- WhatsApp / Telegram / Slack channel integration — backend infrastructure, not MVP
-- Agent memory persistence (SOUL.md, USER.md) — deferred to v2
-- Skill store / ClawHub integration — deferred
-- Voice calls — post-launch per RFC
-- Mobile app — web-only for MVP
+4 predefined AI employees, each with own system prompt and shared workspace:
 
-## Context
+| Agent              | Role                  | Personality                                         |
+| ------------------ | --------------------- | --------------------------------------------------- |
+| **Chief of Staff** | Executive coordinator | Routes tasks, summarizes status, manages follow-ups |
+| **Designer**       | Creative & brand      | Visual assets, PPT, social media content, brand     |
+| **Finance**        | Financial operations  | Expense tracking, reports, tax calculation          |
+| **Legal**          | Legal & compliance    | Contract review, risk flagging, compliance          |
 
-**RFC Source:** `rfc-0003-ux-research-super-agent.md` — comprehensive UX research document covering user sentiment, competitive analysis, and three-interface model design recommendations.
+Each agent maintains independent message history but shares file context (future v2).
 
-**Key UX insight from RFC:** The #1 problem is the "black box" — users don't know what their agents can do, are doing, or have done. The task board directly addresses this. The chat interface must feel like texting a helpful assistant, not configuring a system.
+## UI Component Strategy
 
-**Agent model:** 4 predefined roles sharing a workspace:
-- **Chief of Staff** — coordinator, routes tasks, status summaries
-- **Designer** — PPT, content creation, social media
-- **Finance** — tax, spending tracking, receipt processing
-- **Legal** — contract review, compliance
+**prompt-kit** for all chat-specific surfaces:
 
-**UI components:** prompt-kit (https://www.prompt-kit.com) for chat-specific components (message bubbles, prompt input, loading states, markdown rendering). Existing shadcn/base-ui library for layout and chrome.
+- `PromptInput` + `PromptInputTextarea` + `PromptInputActions` — message composer
+- `Message` + `MessageContent` — chat bubbles (user + agent)
+- `ChatContainer` — scrollable message area
+- `PromptSuggestion` — discovery cards for first-message state
+- `Loader` — thinking indicator while waiting for first token
+- `ResponseStream` — not used for real streaming (LLM output goes direct); used for mock demos
+- `Reasoning` — collapsible reasoning display if agent exposes CoT
 
-**Existing codebase:** Prototype with shadcn component examples only (`component-example.tsx`). The routes structure (`__root.tsx`, `index.tsx`) and full design system are in place. The new workspace UI replaces `index.tsx`.
+**shadcn + @base-ui/react** for workspace chrome (sidebar, headers, tabs, badges).
 
-**API approach:** TanStack Start `createServerFn` handlers call Anthropic SDK server-side. API key via `ANTHROPIC_API_KEY` env var. Never exposed to browser bundle.
+## API Architecture
+
+TanStack Start `createServerFn` handlers call Anthropic SDK server-side. API key via `ANTHROPIC_API_KEY` env var — never exposed to browser bundle. No streaming infrastructure beyond what TanStack Start's server functions support (SSE or chunked response).
+
+## Current State
+
+**Phase 1: Static Layout Shell** — Not started
+
+**Remaining work**: All phases (1–5)
 
 ## Constraints
 
-- **Tech stack**: TanStack Start + React 19 — must stay within existing stack
-- **Package manager**: Bun only — never npm/yarn/pnpm
+- **Tech stack**: TanStack Start + React 19 — no framework changes
+- **Package manager**: Bun only — `bun`, `bunx`, never npm/yarn/pnpm
 - **Styling**: Semantic color tokens only — no hardcoded hex/rgb/oklch in components
-- **Components**: shadcn add via `bunx shadcn@latest add <component>` — don't hand-write from scratch
-- **API key**: Separate `ANTHROPIC_API_KEY` from Anthropic Console — Claude Code token cannot be reused
+- **API key**: `ANTHROPIC_API_KEY` separate from Anthropic Console — Claude Code token cannot be reused
 - **Prototype**: No backend persistence — all state is in-memory/client-side (except API calls)
+- **Auth**: None — hardcoded user identity only
 
-## Key Decisions
+## Source Documents
 
-| Decision | Rationale | Outcome |
-|----------|-----------|---------|
-| Chat + task board only (no file browser) | Ships faster, solves the black box problem — the #1 UX issue from RFC | — Pending |
-| Real Claude API (not mock) | Makes the prototype feel real for stakeholder demos | — Pending |
-| Per-agent to-do list (not Kanban) | RFC decision (2026-02-19): Kanban is foreign to normie target users | — Pending |
-| prompt-kit for chat components | Purpose-built for AI chat UIs, avoids reinventing message bubbles/streaming | — Pending |
-| 4 predefined agents (no custom agents) | Simplest path to demonstrating multi-agent UX; custom agents deferred | — Pending |
-| TanStack Start server functions for API | Keeps API key server-side, aligns with existing stack | — Pending |
-| All GSD agents on Sonnet | User preference for token cost control during development | — Pending |
+- **RFC-0003**: `/Users/imo/Documents/GitHub/atlas/rfcs/projects/superagent/rfc-0003-ux-research-super-agent.md`
+- **prompt-kit docs**: https://www.prompt-kit.com/llms-full.txt
+
+## Key RFC Insights Applied
+
+1. **Black box problem** (§1.6 #7) → solved by task board with real-time status
+2. **Per-agent to-do list** (not Kanban) → RFC decision confirmed 2026-02-19
+3. **Chat-first, task board week-2** → task board accessible via tab/toggle, not default view
+4. **Named sessions/threads** (§1.6 #2) → v2 feature; MVP is single thread per agent
+5. **Three-tier autonomy** (§1.4) → reflected in task status: Needs Input = "suggested" tier
+6. **Discovery cards** (§3.1) → prompt-kit `PromptSuggestion` for empty state per agent
 
 ---
-*Last updated: 2026-02-19 after initialization*
+
+_Created: 2026-02-19_

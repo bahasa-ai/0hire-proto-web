@@ -1,0 +1,58 @@
+import { StickToBottom } from 'use-stick-to-bottom'
+
+import { cn } from '@/lib/utils'
+
+export type ChatContainerRootProps = {
+  children: React.ReactNode
+  className?: string
+} & React.HTMLAttributes<HTMLDivElement>
+
+export type ChatContainerContentProps = {
+  children: React.ReactNode
+  className?: string
+} & React.HTMLAttributes<HTMLDivElement>
+
+export type ChatContainerScrollAnchorProps = {
+  className?: string
+  ref?: React.RefObject<HTMLDivElement>
+} & React.HTMLAttributes<HTMLDivElement>
+
+function ChatContainerRoot({
+  children,
+  className,
+  ...props
+}: ChatContainerRootProps) {
+  return (
+    <StickToBottom
+      className={cn('relative overflow-y-auto', className)}
+      role="log"
+      {...props}
+    >
+      {children}
+    </StickToBottom>
+  )
+}
+
+function ChatContainerContent({
+  children,
+  className,
+  ...props
+}: ChatContainerContentProps) {
+  return (
+    <StickToBottom.Content
+      className={cn('flex flex-col', className)}
+      {...props}
+    >
+      {children}
+    </StickToBottom.Content>
+  )
+}
+
+function ChatContainerScrollAnchor({
+  className,
+  ...props
+}: ChatContainerScrollAnchorProps) {
+  return <div className={cn('h-1 w-full shrink-0', className)} {...props} />
+}
+
+export { ChatContainerRoot, ChatContainerContent, ChatContainerScrollAnchor }

@@ -1,63 +1,41 @@
-# Project State
+# Project State: Zero Hire — Agent Workspace MVP
 
-## Project Reference
+## Current Phase
 
-See: .planning/PROJECT.md (updated 2026-02-19)
+**Phase 3: Claude Streaming Integration** — Not started
 
-**Core value:** A non-technical business owner can talk to their AI team and always know what it's doing — solving the "black box problem" through a familiar chat + task board interface.
-**Current focus:** Phase 1 — Static Layout Shell
+## Execution History
 
-## Current Position
+| Phase                                     | Status      | Date       | Notes                                                                          |
+| ----------------------------------------- | ----------- | ---------- | ------------------------------------------------------------------------------ |
+| Phase 1: Static Layout Shell              | ✅ Complete | 2026-02-19 | Sidebar + main panel, 4 agents, channel switching, user footer                 |
+| Phase 2: Chat UI + State Infrastructure   | ✅ Complete | 2026-02-19 | prompt-kit chat UI, WorkspaceContext, memo-style agent messages, underline tabs |
+| Phase 3: Claude Streaming Integration     | Not started | —          |                                                                                |
+| Phase 4: Task Board + Agent Status Badges | Not started | —          |                                                                                |
+| Phase 5: Polish + Production Hardening    | Not started | —          |                                                                                |
 
-Phase: 1 of 5 (Static Layout Shell)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-02-19 — Roadmap created (5 phases, 23 requirements mapped)
+## Key Decisions Log
 
-Progress: [░░░░░░░░░░] 0%
+| Date       | Decision                                          | Rationale                                                                     |
+| ---------- | ------------------------------------------------- | ----------------------------------------------------------------------------- |
+| 2026-02-19 | Per-agent to-do list (not Kanban)                 | RFC-0003 team decision — Kanban foreign to normie target users                |
+| 2026-02-19 | prompt-kit for all chat UI components             | Purpose-built for AI interfaces; avoids reinventing message bubbles/streaming |
+| 2026-02-19 | TanStack Start `createServerFn` for Claude API    | Keeps API key server-side; aligns with existing stack                         |
+| 2026-02-19 | Mock responses in Phase 2, real Claude in Phase 3 | Derisks chat state implementation before adding streaming complexity          |
+| 2026-02-19 | 4 predefined agents, no custom agents for MVP     | Simplest path to demonstrating multi-agent UX                                 |
+| 2026-02-19 | prompt-kit components sourced from GitHub         | prompt-kit.com registry returned 429; components manually installed from ibelick/prompt-kit |
 
-## Performance Metrics
+## Active Constraints
 
-**Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Bun only — never npm/yarn/pnpm
+- Semantic color tokens only — no hardcoded hex/rgb/oklch
+- `ANTHROPIC_API_KEY` server-side only — never in browser bundle
+- No backend persistence — all state in-memory/client-side for MVP
 
-**By Phase:**
+## Next Action
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| - | - | - | - |
+Run `/gsd:plan-phase 3` to plan Phase 3 (Claude Streaming Integration).
 
-**Recent Trend:**
-- Last 5 plans: none yet
-- Trend: -
+---
 
-*Updated after each plan completion*
-
-## Accumulated Context
-
-### Decisions
-
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- [Roadmap]: State management → useReducer+Context (no Zustand) — sufficient for prototype, zero external dep
-- [Roadmap]: Streaming → createServerFn + direct @anthropic-ai/sdk (not Vercel AI SDK) — aligns with TanStack Start patterns
-- [Roadmap]: prompt-kit → install only chat-specific components (PromptInput, Message, ChatContainer, Loader) — never generic UI components that overwrite base-nova
-
-### Pending Todos
-
-None yet.
-
-### Blockers/Concerns
-
-- [Phase 3]: Production env var silently undefined (TanStack Start #4318) — must smoke-test `bun run build && ANTHROPIC_API_KEY=xxx bun run start` after first server function
-- [Phase 3]: Abort signal not propagated (TanStack Start #4651) — must pass `signal` through handler and check `signal.aborted` at every `yield`
-- [Phase 4]: prompt-kit may overwrite base-nova components — audit `git diff` after every `bunx shadcn add`; install only chat-specific components
-
-## Session Continuity
-
-Last session: 2026-02-19
-Stopped at: Roadmap created — ready to plan Phase 1
-Resume file: None
+_Last updated: 2026-02-19_

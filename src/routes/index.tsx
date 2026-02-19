@@ -1,10 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ComponentExample } from "@/components/component-example";
+import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute("/")({ component: App });
+import { WorkspaceLayout } from '@/components/workspace/workspace-layout'
 
-function App() {
-return (
-  <ComponentExample />
-);
-}
+export const Route = createFileRoute('/')({ component: WorkspaceLayout })

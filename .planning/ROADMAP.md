@@ -19,9 +19,11 @@ The single core value — a non-technical operator can talk to their AI team and
 **Plans:** 1 plan
 
 Plans:
+
 - [ ] 01-PLAN.md — Full workspace shell (data layer + sidebar + main panel + route wiring)
 
 **Success Criteria — All must be TRUE:**
+
 1. Sidebar lists Chief of Staff, Designer, Finance, Legal with avatar initials and role label
 2. Clicking an agent switches the main panel to that agent's view
 3. Active agent is visually highlighted in the sidebar
@@ -39,6 +41,7 @@ Plans:
 **Requirements:** CHAT-01, CHAT-02, CHAT-03, CHAT-04, CHAT-05, RENDER-02, RENDER-03
 
 **Key work:**
+
 - Install prompt-kit: `PromptInput`, `Message`, `ChatContainer`, `PromptSuggestion`, `Loader`
 - `useReducer` + React Context for per-agent message state (`WorkspaceContext`)
 - `ChatView` component — `ChatContainer` + message list + `PromptInput`
@@ -48,6 +51,7 @@ Plans:
 - Channel tab toggle — Chat | Tasks (Tasks panel is empty placeholder in Phase 2)
 
 **Success Criteria — All must be TRUE:**
+
 1. User sees a scrollable conversation history for the active agent channel (`ChatContainer`)
 2. User can type and send a message — a mock response appears after a short delay
 3. Enter sends; Shift+Enter inserts a newline
@@ -66,6 +70,7 @@ Plans:
 **Requirements:** CHAT-06, STREAM-01, STREAM-02, STREAM-03, STREAM-04, INFRA-01, RENDER-01
 
 **Key work:**
+
 - `createServerFn` handler: `sendMessage(agentId, messages[])` → streamed Claude response
 - Per-agent system prompts in `agents.ts` (Chief of Staff, Designer, Finance, Legal personas)
 - Anthropic SDK `stream()` → SSE or chunked response piped to client
@@ -75,6 +80,7 @@ Plans:
 - Abort controller: cancel stream on channel switch or component unmount
 
 **Success Criteria — All must be TRUE:**
+
 1. Agent responses stream token-by-token — text visibly grows as Claude generates it
 2. Chief of Staff, Designer, Finance, and Legal each respond with clearly distinct personalities
 3. `ANTHROPIC_API_KEY` is server-side only — `grep -r "ANTHROPIC" dist/` returns no matches
@@ -93,6 +99,7 @@ Plans:
 **Requirements:** BOARD-01, BOARD-02, BOARD-03, BOARD-04, BOARD-05
 
 **Key work:**
+
 - `TaskBoard` component — 5 status sections: Scheduled, In Progress, Needs Input, Done, Failed
 - `TaskCard` component — task name, description, status icon, timestamp
 - Mock task data per agent (`src/components/workspace/tasks.ts`) — 3–5 tasks each, realistic
@@ -101,6 +108,7 @@ Plans:
 - RFC-0003 §3.1 status icons: clock (Scheduled), spinner (In Progress), bell (Needs Input), check (Done), warning (Failed)
 
 **Success Criteria — All must be TRUE:**
+
 1. User can toggle between Chat and Tasks tab per agent channel
 2. Task board shows 5 status sections with appropriate icons
 3. Each agent's board has 3–5 pre-seeded realistic tasks on first load
@@ -116,6 +124,7 @@ Plans:
 **Depends on:** Phase 4
 
 **Key work:**
+
 - Per-channel scroll position preservation on channel switch
 - Smooth empty → content transitions when first message arrives
 - Hung stream timeout (10s) with retry button
@@ -126,6 +135,7 @@ Plans:
 - `bun run check` passes clean
 
 **Success Criteria — All must be TRUE:**
+
 1. Thinking indicator appears immediately after sending; disappears on first token
 2. Hung streams time out after 10s and show a retry button — no indefinite spinner
 3. Each agent channel preserves its scroll position when switching agents
@@ -136,13 +146,13 @@ Plans:
 
 ## Progress
 
-| Phase | Status | Completed |
-|-------|--------|-----------|
-| 1. Static Layout Shell | Not started | — |
-| 2. Chat UI + State Infrastructure | Not started | — |
-| 3. Claude Streaming Integration | Not started | — |
-| 4. Task Board + Agent Status Badges | Not started | — |
-| 5. Polish + Production Hardening | Not started | — |
+| Phase                               | Status      | Completed  |
+| ----------------------------------- | ----------- | ---------- |
+| 1. Static Layout Shell              | ✅ Complete | 2026-02-19 |
+| 2. Chat UI + State Infrastructure   | ✅ Complete | 2026-02-19 |
+| 3. Claude Streaming Integration     | Not started | —          |
+| 4. Task Board + Agent Status Badges | Not started | —          |
+| 5. Polish + Production Hardening    | Not started | —          |
 
 **Execution order:** 1 → 2 → 3 → 4 → 5
 
@@ -150,19 +160,20 @@ Plans:
 
 ## prompt-kit Component Map
 
-| Component | Phase | Usage |
-|-----------|-------|-------|
-| `PromptInput` | 2 | Message composer root |
-| `PromptInputTextarea` | 2 | Auto-resizing text input |
-| `PromptInputActions` | 2 | Send button + future attachments |
-| `Message` | 2 | User and agent chat bubbles |
-| `MessageContent` | 2 | Bubble content wrapper |
-| `ChatContainer` | 2 | Scrollable message area |
-| `PromptSuggestion` | 2 | Empty state discovery cards |
-| `Loader` | 3 | Thinking indicator (pre-first-token) |
-| `Markdown` | 3 | Agent response markdown rendering |
-| `Reasoning` | 3+ | Optional CoT display (if Claude returns reasoning) |
+| Component             | Phase | Usage                                              |
+| --------------------- | ----- | -------------------------------------------------- |
+| `PromptInput`         | 2     | Message composer root                              |
+| `PromptInputTextarea` | 2     | Auto-resizing text input                           |
+| `PromptInputActions`  | 2     | Send button + future attachments                   |
+| `Message`             | 2     | User and agent chat bubbles                        |
+| `MessageContent`      | 2     | Bubble content wrapper                             |
+| `ChatContainer`       | 2     | Scrollable message area                            |
+| `PromptSuggestion`    | 2     | Empty state discovery cards                        |
+| `Loader`              | 3     | Thinking indicator (pre-first-token)               |
+| `Markdown`            | 3     | Agent response markdown rendering                  |
+| `Reasoning`           | 3+    | Optional CoT display (if Claude returns reasoning) |
 
 ---
-*Roadmap created: 2026-02-19*
-*Requirements coverage: 24/24 v1 requirements mapped across Phases 1–4*
+
+_Roadmap created: 2026-02-19_
+_Requirements coverage: 24/24 v1 requirements mapped across Phases 1–4_
