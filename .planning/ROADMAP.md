@@ -150,9 +150,9 @@ Plans:
 | ----------------------------------- | ----------- | ---------- |
 | 1. Static Layout Shell              | ✅ Complete | 2026-02-19 |
 | 2. Chat UI + State Infrastructure   | ✅ Complete | 2026-02-19 |
-| 3. Claude Streaming Integration     | Not started | —          |
-| 4. Task Board + Agent Status Badges | Not started | —          |
-| 5. Polish + Production Hardening    | Not started | —          |
+| 3. Claude Streaming Integration     | ✅ Complete | 2026-02-19 |
+| 4. Task Board + Agent Status Badges | ✅ Complete | 2026-02-19 |
+| 5. Polish + Production Hardening    | ✅ Complete | 2026-02-19 |
 
 **Execution order:** 1 → 2 → 3 → 4 → 5
 
