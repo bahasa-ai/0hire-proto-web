@@ -1,6 +1,6 @@
+import { ChatView } from './chat-view'
 import type { Agent } from './agents'
 
-import { ChatView } from './chat-view'
 
 interface WorkspaceMainProps {
   activeAgent: Agent
