@@ -87,30 +87,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 | LAYOUT-02 | Phase 1 | Pending |
 | LAYOUT-03 | Phase 1 | Pending |
 | LAYOUT-04 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
 | CHAT-01 | Phase 2 | Pending |
 | CHAT-02 | Phase 2 | Pending |
 | CHAT-03 | Phase 2 | Pending |
 | CHAT-04 | Phase 2 | Pending |
 | CHAT-05 | Phase 2 | Pending |
+| RENDER-02 | Phase 2 | Pending |
+| RENDER-03 | Phase 2 | Pending |
 | STREAM-01 | Phase 3 | Pending |
 | STREAM-02 | Phase 3 | Pending |
 | STREAM-03 | Phase 3 | Pending |
 | STREAM-04 | Phase 3 | Pending |
+| INFRA-01 | Phase 3 | Pending |
 | RENDER-01 | Phase 4 | Pending |
-| RENDER-02 | Phase 2 | Pending |
-| RENDER-03 | Phase 2 | Pending |
 | BOARD-01 | Phase 4 | Pending |
 | BOARD-02 | Phase 4 | Pending |
 | BOARD-03 | Phase 4 | Pending |
 | BOARD-04 | Phase 4 | Pending |
 | BOARD-05 | Phase 4 | Pending |
-| INFRA-01 | Phase 3 | Pending |
-| INFRA-02 | Phase 1 | Pending |
 
 **Coverage:**
 - v1 requirements: 23 total
-- Mapped to phases: 23
+- Mapped to phases: 23 (Phases 1–4)
 - Unmapped: 0 ✓
+- Phase 5: cross-cutting quality attributes — no new functional requirements
 
 ---
 *Requirements defined: 2026-02-19*
