@@ -11,6 +11,7 @@ import {
 } from './workspace-context'
 import type { Agent } from './agents'
 import type { ChatMessage } from './workspace-context'
+import type { ToolPart } from '@/components/prompt-kit/tool'
 import type { StreamChunk } from '@/server/chat'
 
 
@@ -35,6 +36,7 @@ import {
 import { ScrollButton } from '@/components/prompt-kit/scroll-button'
 import { SystemMessage } from '@/components/prompt-kit/system-message'
 import { TextShimmer } from '@/components/prompt-kit/text-shimmer'
+import { Tool } from '@/components/prompt-kit/tool'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { streamChatFn } from '@/server/chat'
@@ -157,11 +159,12 @@ export function ChatView({
       setError(null)
       setIsWaitingForFirstToken(true)
 
+      // Extended timeout to 60s — tool calls can take up to 30s before yielding text.
       timeoutRef.current = setTimeout(() => {
         abortCurrentStream()
         setIsWaitingForFirstToken(false)
         setError('timeout')
-      }, 10_000)
+      }, 60_000)
 
       try {
         const generator = await streamChatFn({
@@ -178,7 +181,45 @@ export function ChatView({
         }
 
         for await (const chunk of generator) {
-          if (isFirstChunk) {
+          if (chunk.type === 'tool_call_start') {
+            if (isFirstChunk) {
+              isFirstChunk = false
+              clearStreamTimeout()
+              setIsWaitingForFirstToken(false)
+
+              // Create the agent message shell with empty content and an empty toolCalls array
+              dispatch({
+                type: 'START_STREAMING',
+                agentId: agent.id,
+                message: makeMessage('agent', '', agent.id, {
+                  id: agentMessageId,
+                  isStreaming: true,
+                  toolCalls: [],
+                }),
+              })
+            }
+
+            dispatch({
+              type: 'APPEND_TOOL_CALL',
+              agentId: agent.id,
+              messageId: agentMessageId,
+              toolCall: {
+                id: chunk.id,
+                name: chunk.name,
+                input: chunk.input,
+                status: 'running',
+              },
+            })
+          } else if (chunk.type === 'tool_call_end') {
+            dispatch({
+              type: 'UPDATE_TOOL_CALL',
+              agentId: agent.id,
+              messageId: agentMessageId,
+              toolCallId: chunk.id,
+              update: { status: 'done', output: chunk.output },
+            })
+          } else if (isFirstChunk) {
+            // First chunk is a text or thinking chunk (no tool call)
             isFirstChunk = false
             clearStreamTimeout()
             setIsWaitingForFirstToken(false)
@@ -340,6 +381,25 @@ export function ChatView({
                             {msg.thinking}
                           </ReasoningContent>
                         </Reasoning>
+                      </div>
+                    )}
+                    {msg.toolCalls && msg.toolCalls.length > 0 && (
+                      <div className="mb-2">
+                        {msg.toolCalls.map(tc => {
+                          const toolPart: ToolPart = {
+                            type: tc.name,
+                            state:
+                              tc.status === 'running'
+                                ? 'input-streaming'
+                                : tc.status === 'done'
+                                  ? 'output-available'
+                                  : 'output-error',
+                            input: tc.input,
+                            output: tc.output,
+                            toolCallId: tc.id,
+                          }
+                          return <Tool key={tc.id} toolPart={toolPart} />
+                        })}
                       </div>
                     )}
                     <MessageContent className="text-foreground rounded-none bg-transparent p-0 text-sm leading-relaxed">
