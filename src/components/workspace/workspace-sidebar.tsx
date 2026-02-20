@@ -1,14 +1,12 @@
 import { Link, useParams } from '@tanstack/react-router'
-import { ChevronDown, MoreHorizontal, Plus } from 'lucide-react'
-import { LayoutGroup } from 'motion/react'
+import { ChevronDown, MoreHorizontal } from 'lucide-react'
 import { AgentChannelItem } from './agent-channel-item'
 import { AGENTS, CURRENT_USER, DEFAULT_AGENT_ID } from './agents'
 import { cn } from '@/lib/utils'
 
 export function WorkspaceSidebar() {
-  const { agentId, conversationId } = useParams({ strict: false })
+  const { agentId } = useParams({ strict: false })
   const activeId = agentId ?? DEFAULT_AGENT_ID
-  const activeConversationId = conversationId ?? null
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col overflow-hidden rounded-xl border shadow-2xl shadow-gray-200">
@@ -58,28 +56,17 @@ export function WorkspaceSidebar() {
           <p className="text-muted-foreground/70 flex-1 text-[11px] font-semibold tracking-widest uppercase">
             Agents
           </p>
-          <Link
-            to="/$agentId"
-            params={{ agentId: activeId }}
-            title="New chat"
-            className="text-muted-foreground hover:text-sidebar-foreground -mr-0.5 rounded p-0.5 transition-colors"
-          >
-            <Plus className="size-3.5" />
-          </Link>
         </div>
 
-        <LayoutGroup id="agent-channels">
+        <>
           {AGENTS.map(agent => (
             <AgentChannelItem
               key={agent.id}
               agent={agent}
               isActive={agent.id === activeId}
-              activeConversationId={
-                agent.id === activeId ? activeConversationId : null
-              }
             />
           ))}
-        </LayoutGroup>
+        </>
       </nav>
 
       <div className="border-sidebar-border border-t px-2 py-2">

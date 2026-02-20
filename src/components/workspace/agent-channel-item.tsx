@@ -1,26 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import { MessageSquare, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
-import { useRef, useState } from 'react'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '../ui/dropdown-menu'
-import { ScrollArea } from '../ui/scroll-area'
 import { AGENT_TASKS, deriveAgentStatus } from './tasks'
-import { getConversationList, useWorkspace } from './workspace-context'
 import type { Agent } from './agents'
 import type { AgentStatus } from './tasks'
 import { cn } from '@/lib/utils'
-import { PulseDotLoader } from '@/components/prompt-kit/loader'
 
 interface AgentChannelItemProps {
   agent: Agent
   isActive: boolean
-  activeConversationId: string | null
 }
 
 function statusDotClass(status: AgentStatus): string | null {
@@ -36,104 +22,12 @@ function statusDotClass(status: AgentStatus): string | null {
   }
 }
 
-function HistoryLink({
-  agentId,
-  convo,
-  isActiveConvo,
-  isStreaming,
-}: {
-  agentId: string
-  convo: { id: string; title: string }
-  isActiveConvo: boolean
-  isStreaming: boolean
-}) {
-  const title = convo.title || 'New chat'
-
-  return (
-    <Link
-      to="/$agentId/$conversationId"
-      params={{ agentId, conversationId: convo.id }}
-      className={cn(
-        'flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors',
-        isActiveConvo
-          ? 'text-primary font-medium'
-          : 'text-muted-foreground hover:text-foreground',
-      )}
-    >
-      {isActiveConvo && isStreaming ? (
-        <PulseDotLoader size="lg" className="size-3.5 shrink-0 bg-blue-400" />
-      ) : (
-        <MessageSquare
-          className={cn(
-            'size-3.5 shrink-0',
-            isActiveConvo ? 'fill-blue-400 text-blue-400' : 'opacity-50',
-          )}
-        />
-      )}
-      <span className="truncate">{title}</span>
-    </Link>
-  )
-}
-
-export function AgentChannelItem({
-  agent,
-  isActive,
-  activeConversationId,
-}: AgentChannelItemProps) {
-  const { state, dispatch } = useWorkspace()
+export function AgentChannelItem({ agent, isActive }: AgentChannelItemProps) {
   const agentStatus = deriveAgentStatus(AGENT_TASKS[agent.id] ?? [])
   const dotClass = statusDotClass(agentStatus)
 
-  const conversations = getConversationList(state, agent.id)
-
-  // Show loader from the moment a user message is sent (last msg is user)
-  // through the full streaming response, not just when first token arrives.
-  const streamingConvoId =
-    Object.values(state.conversations[agent.id] ?? {}).find(convo => {
-      if (convo.messages.some(m => m.isStreaming)) return true
-      if (convo.messages.length === 0) return false
-      const last = convo.messages[convo.messages.length - 1]
-      return last.role === 'user'
-    })?.id ?? null
-
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editValue, setEditValue] = useState('')
-  const editInputRef = useRef<HTMLInputElement>(null)
-
-  function handleRenameStart(convoId: string, currentTitle: string) {
-    setEditingId(convoId)
-    setEditValue(currentTitle)
-    requestAnimationFrame(() => editInputRef.current?.focus())
-  }
-
-  function handleRenameCommit(convoId: string) {
-    const trimmed = editValue.trim()
-    if (
-      trimmed &&
-      trimmed !== conversations.find(c => c.id === convoId)?.title
-    ) {
-      dispatch({
-        type: 'RENAME_CONVERSATION',
-        agentId: agent.id,
-        conversationId: convoId,
-        title: trimmed,
-      })
-    }
-    setEditingId(null)
-  }
-
-  function handleDelete(convoId: string) {
-    dispatch({
-      type: 'DELETE_CONVERSATION',
-      agentId: agent.id,
-      conversationId: convoId,
-    })
-  }
-
   return (
-    <motion.div
-      layout="position"
-      transition={{ type: 'spring', duration: 0.35, bounce: 0 }}
+    <div
       className={cn('rounded-xl p-1', isActive && 'bg-muted inset-shadow-sm')}
     >
       <Link
@@ -174,100 +68,10 @@ export function AgentChannelItem({
               isActive ? 'opacity-60' : 'text-muted-foreground',
             )}
           >
-            {isActive ? (
-              <>
-                <span className="group-hover/agent:hidden">{agent.role}</span>
-                <span className="hidden group-hover/agent:inline">
-                  Start new chat
-                </span>
-              </>
-            ) : (
-              agent.role
-            )}
+            {agent.role}
           </p>
         </div>
       </Link>
-      <AnimatePresence initial={false}>
-        {isActive && conversations.length > 0 && (
-          <motion.div
-            key="history"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ type: 'spring', duration: 0.35, bounce: 0 }}
-            className="isolate overflow-hidden"
-          >
-            <ScrollArea
-              className={conversations.length > 4 ? 'h-48' : undefined}
-              maskHeight={16}
-              maskClassName="before:from-muted after:from-muted"
-            >
-              <div className="mt-1 flex flex-col gap-0.5 px-0.5">
-                {conversations.map(convo => (
-                  <div key={convo.id} className="group/hist">
-                    {editingId === convo.id ? (
-                      <input
-                        ref={editInputRef}
-                        type="text"
-                        value={editValue}
-                        onChange={e => setEditValue(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') handleRenameCommit(convo.id)
-                          if (e.key === 'Escape') setEditingId(null)
-                        }}
-                        onBlur={() => handleRenameCommit(convo.id)}
-                        className="text-foreground mx-0.5 my-0.5 min-w-0 flex-1 rounded-md border px-2 py-1.5 text-sm outline-none"
-                      />
-                    ) : (
-                      <div className="flex items-center">
-                        <HistoryLink
-                          agentId={agent.id}
-                          convo={convo}
-                          isActiveConvo={convo.id === activeConversationId}
-                          isStreaming={convo.id === streamingConvoId}
-                        />
-                        <DropdownMenu>
-                          <DropdownMenuTrigger
-                            className={cn(
-                              'mr-1 flex size-5 shrink-0 cursor-pointer items-center justify-center rounded transition-opacity',
-                              'opacity-0 group-hover/hist:opacity-100 focus-visible:opacity-100 data-popup-open:opacity-100',
-                              'hover:bg-accent hover:text-accent-foreground focus-visible:ring-ring focus-visible:ring-2 focus-visible:outline-none',
-                            )}
-                            onClick={e => e.stopPropagation()}
-                          >
-                            <MoreHorizontal className="size-3.5" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent side="right" align="start">
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleRenameStart(
-                                  convo.id,
-                                  convo.title || 'New chat',
-                                )
-                              }
-                            >
-                              <Pencil className="size-3.5" />
-                              Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-destructive focus:text-destructive"
-                              onClick={() => handleDelete(convo.id)}
-                            >
-                              <Trash2 className="size-3.5" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+    </div>
   )
 }

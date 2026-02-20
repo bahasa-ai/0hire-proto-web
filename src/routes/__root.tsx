@@ -10,10 +10,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import 'streamdown/styles.css'
 import appCss from '../styles.css?url'
 import { TaskStack } from '@/components/workspace/task-stack'
-import {
-  WorkspaceProvider,
-  useWorkspace,
-} from '@/components/workspace/workspace-context'
+import { WorkspaceProvider } from '@/components/workspace/workspace-context'
 import { WorkspaceSidebar } from '@/components/workspace/workspace-sidebar'
 
 export const Route = createRootRoute({
@@ -31,27 +28,17 @@ export const Route = createRootRoute({
   component: RootComponent,
 })
 
-function ChatTitleBar() {
+function AgentTitleBar() {
   const matches = useMatches()
-  const { state } = useWorkspace()
 
-  const convoMatch = matches.find(
-    m => m.routeId === '/$agentId/$conversationId',
-  )
-  if (!convoMatch) return null
+  const agentMatch = matches.find(m => m.routeId === '/$agentId/')
+  if (!agentMatch) return null
 
-  const { agentId, conversationId } = convoMatch.params as {
-    agentId: string
-    conversationId: string
-  }
-  const title = state.conversations[agentId]?.[conversationId]?.title // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+  const { agentId } = agentMatch.params as { agentId: string }
 
   return (
     <div className="relative z-10 flex h-13.5 shrink-0 items-center border-b px-4">
-      <span className="text-foreground min-w-0 flex-1 truncate text-sm font-medium">
-        {title || 'New conversation'}
-      </span>
-      <TaskStack agentId={agentId} conversationId={conversationId} />
+      <TaskStack agentId={agentId} />
     </div>
   )
 }
@@ -62,7 +49,7 @@ function RootComponent() {
       <div className="animate-in fade-in flex h-svh p-3 duration-300">
         <WorkspaceSidebar />
         <main className="flex min-w-0 flex-1 flex-col">
-          <ChatTitleBar />
+          <AgentTitleBar />
           <Outlet />
         </main>
       </div>

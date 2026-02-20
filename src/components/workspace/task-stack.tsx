@@ -41,26 +41,22 @@ function humanize(name: string) {
 
 interface TaskStackProps {
   agentId: string
-  conversationId: string
 }
 
-export function TaskStack({ agentId, conversationId }: TaskStackProps) {
+export function TaskStack({ agentId }: TaskStackProps) {
   const [expanded, setExpanded] = useState(false)
   const { state } = useWorkspace()
 
   const toolCalls = useMemo(() => {
-    const messages =
-      state.conversations[agentId]?.[conversationId]?.messages ?? [] // eslint-disable-line @typescript-eslint/no-unnecessary-condition
+    const messages = state.messages[agentId] ?? []
     const calls: Array<ToolCall> = []
     for (const msg of messages) {
       if (msg.role === 'agent' && msg.toolCalls) {
         calls.push(...msg.toolCalls)
       }
     }
-    return calls.sort(
-      (a, b) => (PRIORITY[a.status] ?? 9) - (PRIORITY[b.status] ?? 9),
-    )
-  }, [state.conversations, agentId, conversationId])
+    return calls.sort((a, b) => PRIORITY[a.status] - PRIORITY[b.status])
+  }, [state.messages, agentId])
 
   if (toolCalls.length === 0) return null
 

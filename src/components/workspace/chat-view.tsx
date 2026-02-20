@@ -14,11 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Streamdown } from 'streamdown'
 import { AGENT_SYSTEM_PROMPTS } from './agents'
 import { EmptyChat } from './empty-chat'
-import {
-  generateId,
-  getActiveMessages,
-  useWorkspace,
-} from './workspace-context'
+import { getActiveMessages, useWorkspace } from './workspace-context'
 import type { ToolPart } from '@/components/prompt-kit/tool'
 import type { StreamChunk } from '@/server/chat'
 import type { Agent } from './agents'
@@ -50,6 +46,7 @@ import { TextShimmer } from '@/components/prompt-kit/text-shimmer'
 import { Tool } from '@/components/prompt-kit/tool'
 import { Button } from '@/components/ui/button'
 import { streamChatFn } from '@/server/chat'
+// eslint-disable-next-line import/order -- prettier sorts this after @/ imports
 import type { ChatMessage } from './workspace-context'
 
 type ChatErrorType = 'rate-limited' | 'network' | 'timeout' | 'generic' | null
@@ -63,8 +60,6 @@ const ERROR_MESSAGES: Record<NonNullable<ChatErrorType>, string> = {
 
 interface ChatViewProps {
   agent: Agent
-  conversationId?: string
-  onConversationCreated?: (conversationId: string) => void
 }
 
 function makeMessage(
@@ -111,11 +106,7 @@ function formatTime(ts: number): string {
   })
 }
 
-export function ChatView({
-  agent,
-  conversationId,
-  onConversationCreated,
-}: ChatViewProps) {
+export function ChatView({ agent }: ChatViewProps) {
   const { state, dispatch } = useWorkspace()
   const [input, setInput] = useState('')
   const [isWaitingForFirstToken, setIsWaitingForFirstToken] = useState(false)
@@ -151,14 +142,12 @@ export function ChatView({
     dispatch({ type: 'INTERRUPT_STREAMING', agentId, messageId })
   }, [dispatch, clearStreamTimeout])
 
-  const activeConvoId = state.activeConversationId[agent.id] ?? null
-
-  // Reset streaming state on agent or conversation switch
+  // Reset streaming state on agent switch
   useEffect(() => {
     abortCurrentStream()
     setIsWaitingForFirstToken(false)
     setError(null)
-  }, [agent.id, activeConvoId])
+  }, [agent.id])
 
   useEffect(() => () => abortCurrentStream(), [])
 
@@ -291,17 +280,6 @@ export function ChatView({
       const trimmed = text.trim()
       if (!trimmed || isPending) return
 
-      // New-chat: create conversation with a deterministic ID, then navigate
-      if (!conversationId && !state.activeConversationId[agent.id]) {
-        const newConvoId = generateId()
-        dispatch({
-          type: 'CREATE_CONVERSATION',
-          agentId: agent.id,
-          conversationId: newConvoId,
-        })
-        onConversationCreated?.(newConvoId)
-      }
-
       const userMessage = makeMessage('user', trimmed, agent.id)
       dispatch({
         type: 'APPEND_MESSAGE',
@@ -312,15 +290,7 @@ export function ChatView({
 
       await runStream([...getActiveMessages(state, agent.id), userMessage])
     },
-    [
-      agent.id,
-      conversationId,
-      dispatch,
-      isPending,
-      onConversationCreated,
-      state,
-      runStream,
-    ],
+    [agent.id, dispatch, isPending, state, runStream],
   )
 
   const handleRetry = useCallback(async () => {

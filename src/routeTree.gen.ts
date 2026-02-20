@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AgentIdRouteImport } from './routes/$agentId'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AgentIdIndexRouteImport } from './routes/$agentId/index'
-import { Route as AgentIdConversationIdRouteImport } from './routes/$agentId/$conversationId'
 
 const AgentIdRoute = AgentIdRouteImport.update({
   id: '/$agentId',
@@ -29,41 +28,28 @@ const AgentIdIndexRoute = AgentIdIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AgentIdRoute,
 } as any)
-const AgentIdConversationIdRoute = AgentIdConversationIdRouteImport.update({
-  id: '/$conversationId',
-  path: '/$conversationId',
-  getParentRoute: () => AgentIdRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$agentId': typeof AgentIdRouteWithChildren
-  '/$agentId/$conversationId': typeof AgentIdConversationIdRoute
   '/$agentId/': typeof AgentIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$agentId/$conversationId': typeof AgentIdConversationIdRoute
   '/$agentId': typeof AgentIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$agentId': typeof AgentIdRouteWithChildren
-  '/$agentId/$conversationId': typeof AgentIdConversationIdRoute
   '/$agentId/': typeof AgentIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$agentId' | '/$agentId/$conversationId' | '/$agentId/'
+  fullPaths: '/' | '/$agentId' | '/$agentId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$agentId/$conversationId' | '/$agentId'
-  id:
-    | '__root__'
-    | '/'
-    | '/$agentId'
-    | '/$agentId/$conversationId'
-    | '/$agentId/'
+  to: '/' | '/$agentId'
+  id: '__root__' | '/' | '/$agentId' | '/$agentId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,23 +80,14 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgentIdIndexRouteImport
       parentRoute: typeof AgentIdRoute
     }
-    '/$agentId/$conversationId': {
-      id: '/$agentId/$conversationId'
-      path: '/$conversationId'
-      fullPath: '/$agentId/$conversationId'
-      preLoaderRoute: typeof AgentIdConversationIdRouteImport
-      parentRoute: typeof AgentIdRoute
-    }
   }
 }
 
 interface AgentIdRouteChildren {
-  AgentIdConversationIdRoute: typeof AgentIdConversationIdRoute
   AgentIdIndexRoute: typeof AgentIdIndexRoute
 }
 
 const AgentIdRouteChildren: AgentIdRouteChildren = {
-  AgentIdConversationIdRoute: AgentIdConversationIdRoute,
   AgentIdIndexRoute: AgentIdIndexRoute,
 }
 
