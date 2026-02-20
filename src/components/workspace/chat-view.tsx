@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { code } from '@streamdown/code'
-import { ArrowUp, Square } from 'lucide-react'
+import { ArrowUp, Paperclip, Square, X } from 'lucide-react'
 import { Streamdown } from 'streamdown'
 import { AGENT_SYSTEM_PROMPTS } from './agents'
 import { EmptyChat } from './empty-chat'
@@ -110,6 +110,8 @@ export function ChatView({
   const [input, setInput] = useState('')
   const [isWaitingForFirstToken, setIsWaitingForFirstToken] = useState(false)
   const [error, setError] = useState<ChatErrorType>(null)
+  const [files, setFiles] = useState<Array<File>>([])
+  const uploadInputRef = useRef<HTMLInputElement>(null)
 
   const streamingRef = useRef<{
     generator: AsyncGenerator<StreamChunk>
@@ -319,6 +321,19 @@ export function ChatView({
 
   const handleSubmit = useCallback(() => handleSend(input), [input, handleSend])
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setFiles(prev => [...prev, ...Array.from(event.target.files!)])
+    }
+  }
+
+  const handleRemoveFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index))
+    if (uploadInputRef.current) {
+      uploadInputRef.current.value = ''
+    }
+  }
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {isEmpty ? (
@@ -482,8 +497,47 @@ export function ChatView({
             onSubmit={handleSubmit}
             className="w-full"
           >
+            {files.length > 0 && (
+              <div className="flex flex-wrap gap-2 pb-2">
+                {files.map((file, index) => (
+                  <div
+                    key={`${file.name}-${index}`}
+                    className="bg-secondary flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <Paperclip className="size-4" />
+                    <span className="max-w-[120px] truncate">
+                      {file.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFile(index)}
+                      className="hover:bg-secondary/50 rounded-full p-1"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <PromptInputTextarea placeholder={`Message ${agent.name}…`} />
-            <PromptInputActions className="flex justify-end pt-2">
+            <PromptInputActions className="flex items-center justify-between gap-2 pt-2">
+              <PromptInputAction tooltip="Attach files">
+                <label
+                  htmlFor="file-upload"
+                  className="hover:bg-secondary-foreground/10 flex size-8 cursor-pointer items-center justify-center rounded-2xl"
+                >
+                  <input
+                    ref={uploadInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="file-upload"
+                  />
+                  <Paperclip className="text-muted-foreground size-5" />
+                </label>
+              </PromptInputAction>
               {isPending ? (
                 <PromptInputAction tooltip="Stop generating">
                   <Button
@@ -501,7 +555,7 @@ export function ChatView({
                     size="icon"
                     className="size-8 rounded-full"
                     onClick={handleSubmit}
-                    disabled={!input.trim()}
+                    disabled={!input.trim() && files.length === 0}
                   >
                     <ArrowUp className="size-4" />
                   </Button>
