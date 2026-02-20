@@ -10,7 +10,11 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import 'streamdown/styles.css'
 import { AGENTS } from '@/components/workspace/agents'
 import { TaskStack } from '@/components/workspace/task-stack'
-import { WorkspaceProvider } from '@/components/workspace/workspace-context'
+import {
+  getActiveMessages,
+  WorkspaceProvider,
+  useWorkspace,
+} from '@/components/workspace/workspace-context'
 import { WorkspaceSidebar } from '@/components/workspace/workspace-sidebar'
 import { cn } from '@/lib/utils'
 import appCss from '../styles.css?url'
@@ -38,6 +42,10 @@ function AgentTitleBar() {
 
   const { agentId } = agentMatch.params as { agentId: string }
   const agent = AGENTS.find(a => a.id === agentId)
+  const { state } = useWorkspace()
+  const hasMessages = getActiveMessages(state, agentId).length > 0
+
+  if (!hasMessages) return null
 
   return (
     <div className="absolute inset-x-0 top-0 z-10 flex h-13.5 shrink-0 items-center gap-3 px-4">
@@ -51,7 +59,7 @@ function AgentTitleBar() {
           >
             {agent.emoji}
           </span>
-          <div className="flex items-baseline gap-2">
+          <div className="flex flex-col">
             <span className="text-foreground text-sm font-semibold">
               {agent.name}
             </span>
