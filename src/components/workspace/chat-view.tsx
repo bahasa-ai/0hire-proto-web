@@ -357,9 +357,7 @@ export function ChatView({
       ) : (
         <ChatContainerRoot className="relative min-h-0 flex-1">
           <ChatContainerContent className="px-2 py-4">
-            {messages.map((msg, index) => {
-              const isLast = index === messages.length - 1
-
+            {messages.map(msg => {
               return msg.role === 'user' ? (
                 <Message
                   key={msg.id}
@@ -472,12 +470,7 @@ export function ChatView({
                       </Streamdown>
                     </MessageContent>
                     {!msg.isStreaming && !msg.interrupted && (
-                      <MessageActions
-                        className={cn(
-                          '-ml-2.5 flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100',
-                          isLast && 'opacity-100',
-                        )}
-                      >
+                      <MessageActions className="-ml-2.5 flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
                         <MessageAction tooltip="Copy" delayDuration={100}>
                           <Button
                             variant="ghost"
