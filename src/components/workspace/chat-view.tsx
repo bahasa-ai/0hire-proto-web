@@ -361,7 +361,7 @@ export function ChatView({
               ) : (
                 <Message
                   key={msg.id}
-                  className="hover:bg-accent/40 mx-auto flex w-full max-w-3xl items-start gap-3 rounded-md px-2 py-1.5 transition-colors"
+                  className="mx-auto flex w-full max-w-3xl items-start gap-3 px-2 py-1.5"
                 >
                   <AgentAvatar agent={agent} />
                   <div className="min-w-0 flex-1">
