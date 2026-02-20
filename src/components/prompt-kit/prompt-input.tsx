@@ -22,7 +22,7 @@ type PromptInputContextType = {
   maxHeight: number | string
   onSubmit?: () => void
   disabled?: boolean
-  textareaRef: React.RefObject<HTMLTextAreaElement>
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>
 }
 
 const PromptInputContext = createContext<PromptInputContextType>({
@@ -76,28 +76,31 @@ function PromptInput({
   }
 
   return (
-    <PromptInputContext.Provider
-      value={{
-        isLoading,
-        value: value !== undefined ? value : internalValue,
-        setValue: handleChange,
-        maxHeight,
-        onSubmit,
-        disabled,
-        textareaRef,
-      }}
-    >
-      <div
-        className={cn(
-          'border-input bg-background flex w-full flex-col rounded-md border px-3 py-2 text-sm',
-          className,
-        )}
-        onClick={handleClick}
-        {...props}
+    <TooltipProvider>
+      <PromptInputContext.Provider
+        value={{
+          isLoading,
+          value: value ?? internalValue,
+          setValue: onValueChange ?? handleChange,
+          maxHeight,
+          onSubmit,
+          disabled,
+          textareaRef,
+        }}
       >
-        {children}
-      </div>
-    </PromptInputContext.Provider>
+        <div
+          onClick={handleClick}
+          className={cn(
+            'border-input bg-background cursor-text rounded-3xl border p-2 shadow-xs',
+            disabled && 'cursor-not-allowed opacity-60',
+            className,
+          )}
+          {...props}
+        >
+          {children}
+        </div>
+      </PromptInputContext.Provider>
+    </TooltipProvider>
   )
 }
 
@@ -125,14 +128,11 @@ function PromptInputTextarea({
   }
 
   const handleRef = (el: HTMLTextAreaElement | null) => {
-    ;(
-      textareaRef as React.MutableRefObject<HTMLTextAreaElement | null>
-    ).current = el
+    textareaRef.current = el
     adjustHeight(el)
   }
 
   useLayoutEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!textareaRef.current || disableAutosize) return
     const el = textareaRef.current
     el.style.height = 'auto'
@@ -162,12 +162,12 @@ function PromptInputTextarea({
       value={value}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
-      disabled={disabled}
-      rows={1}
       className={cn(
-        'max-h-none min-h-0 resize-none border-0 bg-transparent p-0 shadow-none outline-none focus-visible:ring-0',
+        'text-foreground min-h-[44px] w-full resize-none border-none bg-transparent shadow-none outline-none focus-visible:ring-0 focus-visible:ring-offset-0',
         className,
       )}
+      rows={1}
+      disabled={disabled}
       {...props}
     />
   )
@@ -181,7 +181,7 @@ function PromptInputActions({
   ...props
 }: PromptInputActionsProps) {
   return (
-    <div className={cn('flex items-center gap-1', className)} {...props}>
+    <div className={cn('flex items-center gap-2', className)} {...props}>
       {children}
     </div>
   )
@@ -192,7 +192,7 @@ export type PromptInputActionProps = {
   tooltip: React.ReactNode
   children: React.ReactNode
   side?: 'top' | 'bottom' | 'left' | 'right'
-} & React.ComponentProps<typeof TooltipTrigger>
+} & React.ComponentProps<typeof Tooltip>
 
 function PromptInputAction({
   tooltip,
@@ -204,19 +204,18 @@ function PromptInputAction({
   const { disabled } = usePromptInput()
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger
-          className={className}
-          disabled={disabled}
-          onClick={event => event.stopPropagation()}
-          {...props}
-        >
-          {children}
-        </TooltipTrigger>
-        <TooltipContent side={side}>{tooltip}</TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <Tooltip {...props}>
+      <TooltipTrigger
+        asChild
+        disabled={disabled}
+        onClick={event => event.stopPropagation()}
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent side={side} className={className}>
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 
