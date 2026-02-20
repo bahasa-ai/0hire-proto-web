@@ -1,8 +1,6 @@
 import { Link, useParams } from '@tanstack/react-router'
 import { ChevronDown, MoreHorizontal, Plus } from 'lucide-react'
 import { LayoutGroup } from 'motion/react'
-
-
 import { AgentChannelItem } from './agent-channel-item'
 import { AGENTS, CURRENT_USER, DEFAULT_AGENT_ID } from './agents'
 import { cn } from '@/lib/utils'
@@ -26,7 +24,7 @@ export function WorkspaceSidebar() {
           ZH
         </div>
         <span className="text-sidebar-foreground flex-1 truncate text-sm font-semibold">
-          Zero Hire
+          Øhire
         </span>
         <ChevronDown className="text-muted-foreground size-3.5 shrink-0" />
       </button>

@@ -1,5 +1,4 @@
 import { StickToBottom } from 'use-stick-to-bottom'
-
 import { cn } from '@/lib/utils'
 
 export type ChatContainerRootProps = {
@@ -24,7 +23,7 @@ function ChatContainerRoot({
 }: ChatContainerRootProps) {
   return (
     <StickToBottom
-      className={cn('flex overflow-y-auto', className)}
+      className={cn('flex overflow-hidden', className)}
       resize="smooth"
       initial="instant"
       role="log"

@@ -1,13 +1,10 @@
 import { AlertTriangle, Bell, CheckCircle2, Clock, Loader2 } from 'lucide-react'
 import { TaskCard } from './task-card'
 import { AGENT_TASKS, SECTION_ORDER } from './tasks'
+import type { LucideIcon } from 'lucide-react'
 import type { Agent } from './agents'
 import type { TaskStatus } from './tasks'
-import type { LucideIcon } from 'lucide-react'
-
-
 import { cn } from '@/lib/utils'
-
 
 const SECTION_META: Record<
   TaskStatus,

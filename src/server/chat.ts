@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from '@google/genai'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
@@ -145,6 +144,12 @@ const FAKE_TOOL_RESULTS: Record<string, Record<string, unknown>> = {
   },
 }
 
+interface FunctionCallPart {
+  id: string
+  name: string
+  args: Record<string, unknown>
+}
+
 export const streamChatFn = createServerFn({ method: 'POST' })
   .inputValidator((data: ChatStreamInput) => data)
   .handler(async function* ({ data }) {
@@ -166,10 +171,9 @@ export const streamChatFn = createServerFn({ method: 'POST' })
     const chat = ai.chats.create({
       model: 'gemini-2.5-flash-lite',
       config: {
-        // Append a tool-usage note only when tools are active, so Gemini doesn't
-        // mistake the tool declaration for a restriction on its full capabilities.
+        // Encourage parallel tool calls when the user requests multiple artifacts.
         systemInstruction: hasTools
-          ? `${systemPrompt}\n\nYou have an optional tool available. Only invoke it when the user explicitly asks to create or generate the specific artifact it produces. For all other questions and conversations — including research, advice, opinions, and general discussion — respond normally using your expertise. Never refuse a request just because it doesn't involve the tool.`
+          ? `${systemPrompt}\n\nYou have tools available. When the user requests multiple artifacts (e.g. "create 3 presentations"), call the tool multiple times in parallel — once per artifact, each with distinct parameters. Only invoke tools when the user explicitly asks to create or generate a specific artifact. For all other questions and conversations — including research, advice, opinions, and general discussion — respond normally using your expertise. Never refuse a request just because it doesn't involve the tools.`
           : systemPrompt,
         temperature: 0.7,
         maxOutputTokens: 2048,
@@ -184,15 +188,12 @@ export const streamChatFn = createServerFn({ method: 'POST' })
       history,
     })
 
-    // First turn: may contain a function call or plain text.
+    // First turn: collect all function calls or stream plain text.
     const stream1 = await chat.sendMessageStream({
       message: lastMessage.content,
     })
 
-    let functionCallPart: {
-      name: string
-      args: Record<string, unknown>
-    } | null = null
+    const functionCallParts: Array<FunctionCallPart> = []
 
     for await (const chunk of stream1) {
       if (signal.aborted) return
@@ -201,13 +202,13 @@ export const streamChatFn = createServerFn({ method: 'POST' })
 
       for (const part of parts) {
         if (part.functionCall) {
-          // Gemini chose to call a tool — capture it, suppress any co-yielded text
-          functionCallPart = {
+          functionCallParts.push({
+            id: `tc-${Date.now()}-${Math.random().toString(36).slice(2)}`,
             name: part.functionCall.name ?? '',
             args: part.functionCall.args ?? {},
-          }
-        } else if (part.text && !functionCallPart) {
-          // Only stream text when no function call has been seen in this turn
+          })
+        } else if (part.text && functionCallParts.length === 0) {
+          // Only stream text when no function calls have been seen in this turn
           yield {
             type: part.thought ? 'thinking' : 'text',
             content: part.text,
@@ -216,55 +217,73 @@ export const streamChatFn = createServerFn({ method: 'POST' })
       }
     }
 
-    // If Gemini didn't call a tool, we're done.
-    if (!functionCallPart || signal.aborted) return
+    // If Gemini didn't call any tools, we're done.
+    if (functionCallParts.length === 0 || signal.aborted) return
 
-    // Signal tool execution start to the client.
-    const toolCallId = `tc-${Date.now()}`
-    yield {
-      type: 'tool_call_start',
-      id: toolCallId,
-      name: functionCallPart.name,
-      input: functionCallPart.args,
-    } satisfies StreamChunk
-
-    // Simulate tool execution (5–30 seconds), abort-aware.
-    const duration = 5_000 + Math.random() * 25_000
-    await new Promise<void>(resolve => {
-      const timer = setTimeout(resolve, duration)
-      signal.addEventListener(
-        'abort',
-        () => {
-          clearTimeout(timer)
-          resolve()
-        },
-        { once: true },
-      )
-    })
-
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- signal.aborted can be true after async sleep
-    if (signal.aborted) return
-
-    const fakeResult = FAKE_TOOL_RESULTS[functionCallPart.name] ?? {
-      status: 'completed',
+    // Signal all tool execution starts to the client before any timers begin.
+    for (const fc of functionCallParts) {
+      yield {
+        type: 'tool_call_start',
+        id: fc.id,
+        name: fc.name,
+        input: fc.args,
+      } satisfies StreamChunk
     }
 
-    yield {
-      type: 'tool_call_end',
-      id: toolCallId,
-      output: fakeResult,
-    } satisfies StreamChunk
+    // Run all tool simulations in parallel; yield each end chunk as it completes
+    // so the UI updates each card independently rather than all at once.
+    type SettledCall = { fc: FunctionCallPart; result: Record<string, unknown> }
 
-    // Second turn: send the fake tool result back to Gemini and stream the text response.
+    const pending = functionCallParts.map(
+      fc =>
+        new Promise<SettledCall>(resolve => {
+          const duration = 5_000 + Math.random() * 25_000
+          const timer = setTimeout(() => {
+            resolve({
+              fc,
+              result: FAKE_TOOL_RESULTS[fc.name] ?? { status: 'completed' },
+            })
+          }, duration)
+          signal.addEventListener(
+            'abort',
+            () => {
+              clearTimeout(timer)
+              resolve({ fc, result: {} })
+            },
+            { once: true },
+          )
+        }),
+    )
+
+    // Yield tool_call_end chunks as each parallel task finishes.
+    const remaining = new Set(pending)
+    while (remaining.size > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- signal.aborted can change across await boundaries
+      if (signal.aborted) return
+
+      const winner = await Promise.race(
+        [...remaining].map(p => p.then(r => ({ p, r }))),
+      )
+      remaining.delete(winner.p)
+
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- signal.aborted can change across await boundaries
+      if (signal.aborted) return
+
+      yield {
+        type: 'tool_call_end',
+        id: winner.r.fc.id,
+        output: winner.r.result,
+      } satisfies StreamChunk
+    }
+
+    // Second turn: send all function responses at once and stream the final reply.
     const stream2 = await chat.sendMessageStream({
-      message: [
-        {
-          functionResponse: {
-            name: functionCallPart.name,
-            response: fakeResult,
-          },
+      message: functionCallParts.map(fc => ({
+        functionResponse: {
+          name: fc.name,
+          response: FAKE_TOOL_RESULTS[fc.name] ?? { status: 'completed' },
         },
-      ],
+      })),
     })
 
     for await (const chunk of stream2) {

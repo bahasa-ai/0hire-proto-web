@@ -1,7 +1,5 @@
-import { useCallback, useEffect } from 'react'
-
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
-
+import { useCallback, useEffect } from 'react'
 import { AGENTS } from '@/components/workspace/agents'
 import { ChatView } from '@/components/workspace/chat-view'
 import { useWorkspace } from '@/components/workspace/workspace-context'

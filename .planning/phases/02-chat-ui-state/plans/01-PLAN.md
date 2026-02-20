@@ -282,10 +282,8 @@ Create `src/components/workspace/empty-chat.tsx`.
 **Design intent:** This is not a grid of chips. It's a centered, quiet moment — the agent's identity displayed prominently, then a vertical list of text-forward delegation prompts. Each suggestion is a plain button that looks like a list item, not a pill/card. Uses `PromptSuggestion` from prompt-kit for the click behavior, but styled to match the text-forward aesthetic.
 
 ```tsx
-import type { Agent } from './agents'
-
 import { PromptSuggestion } from '@/components/prompt-kit/prompt-suggestion'
-
+import type { Agent } from './agents'
 import { AGENT_SUGGESTIONS } from './agents'
 
 interface EmptyChatProps {
@@ -358,13 +356,6 @@ const accentBorder = agent.accentColor.replace('bg-', 'border-')
 ```
 
 ```tsx
-import type { Agent } from './agents'
-import type { ChatMessage } from './workspace-context'
-
-import { useCallback, useState } from 'react'
-
-import { ArrowUp } from 'lucide-react'
-
 import {
   ChatContainerContent,
   ChatContainerRoot,
@@ -378,9 +369,12 @@ import {
 } from '@/components/prompt-kit/prompt-input'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-
+import { ArrowUp } from 'lucide-react'
+import { useCallback, useState } from 'react'
+import type { Agent } from './agents'
 import { MOCK_RESPONSES } from './agents'
 import { EmptyChat } from './empty-chat'
+import type { ChatMessage } from './workspace-context'
 import { useWorkspace } from './workspace-context'
 
 interface ChatViewProps {
@@ -551,12 +545,9 @@ Replace `src/components/workspace/workspace-main.tsx` entirely.
 **Design intent — tab toggle:** Underline-style tabs. Active tab gets a `border-b-2 border-primary` indicator, no background fill. This is quieter than a filled button and reads as part of the page's typographic system, not a separate widget.
 
 ```tsx
-import type { Agent } from './agents'
-
-import { useState } from 'react'
-
 import { cn } from '@/lib/utils'
-
+import { useState } from 'react'
+import type { Agent } from './agents'
 import { ChannelHeader } from './channel-header'
 import { ChatView } from './chat-view'
 
@@ -627,7 +618,6 @@ Update `src/components/workspace/workspace-layout.tsx` to wrap the return JSX in
 
 ```tsx
 import { useState } from 'react'
-
 import { AGENTS, DEFAULT_AGENT_ID } from './agents'
 import { WorkspaceProvider } from './workspace-context'
 import { WorkspaceMain } from './workspace-main'

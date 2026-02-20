@@ -1,11 +1,7 @@
-
-import { useRef, useState } from 'react'
-
 import { Link } from '@tanstack/react-router'
 import { MessageSquare, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
-
-
+import { useRef, useState } from 'react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,9 +12,10 @@ import {
 import { ScrollArea } from '../ui/scroll-area'
 import { AGENT_TASKS, deriveAgentStatus } from './tasks'
 import { getConversationList, useWorkspace } from './workspace-context'
-import type { AgentStatus } from './tasks'
 import type { Agent } from './agents'
+import type { AgentStatus } from './tasks'
 import { cn } from '@/lib/utils'
+import { PulseDotLoader } from '@/components/prompt-kit/loader'
 
 interface AgentChannelItemProps {
   agent: Agent
@@ -43,10 +40,12 @@ function HistoryLink({
   agentId,
   convo,
   isActiveConvo,
+  isStreaming,
 }: {
   agentId: string
   convo: { id: string; title: string }
   isActiveConvo: boolean
+  isStreaming: boolean
 }) {
   const title = convo.title || 'New chat'
 
@@ -57,16 +56,20 @@ function HistoryLink({
       className={cn(
         'flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-sm transition-colors',
         isActiveConvo
-          ? 'text-primary font-semibold'
+          ? 'text-primary font-medium'
           : 'text-muted-foreground hover:text-foreground',
       )}
     >
-      <MessageSquare
-        className={cn(
-          'size-3.5 shrink-0',
-          isActiveConvo ? 'fill-current' : 'opacity-50',
-        )}
-      />
+      {isActiveConvo && isStreaming ? (
+        <PulseDotLoader size="lg" className="size-3.5 shrink-0 bg-blue-400" />
+      ) : (
+        <MessageSquare
+          className={cn(
+            'size-3.5 shrink-0',
+            isActiveConvo ? 'fill-blue-400 text-blue-400' : 'opacity-50',
+          )}
+        />
+      )}
       <span className="truncate">{title}</span>
     </Link>
   )
@@ -82,6 +85,16 @@ export function AgentChannelItem({
   const dotClass = statusDotClass(agentStatus)
 
   const conversations = getConversationList(state, agent.id)
+
+  // Show loader from the moment a user message is sent (last msg is user)
+  // through the full streaming response, not just when first token arrives.
+  const streamingConvoId =
+    Object.values(state.conversations[agent.id] ?? {}).find(convo => {
+      if (convo.messages.some(m => m.isStreaming)) return true
+      if (convo.messages.length === 0) return false
+      const last = convo.messages[convo.messages.length - 1]
+      return last.role === 'user'
+    })?.id ?? null
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValue, setEditValue] = useState('')
@@ -211,6 +224,7 @@ export function AgentChannelItem({
                           agentId={agent.id}
                           convo={convo}
                           isActiveConvo={convo.id === activeConversationId}
+                          isStreaming={convo.id === streamingConvoId}
                         />
                         <DropdownMenu>
                           <DropdownMenuTrigger

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Eight-phase build from static shell to fully functional AI workspace. Phases 1–7 are complete. Phase 8 adds pseudo-tool calling — simulated action cards that show the agent visibly working through steps when given a task.
+Eight-phase build from static shell to fully functional AI workspace. All 8 phases are complete.
 
 The single core value — a non-technical operator can talk to their AI team and see exactly what it's doing — is realized after Phase 4. Phase 5 makes it demo-ready. Phase 6 adds conversation management. Phase 7 floats the sidebar. Phase 8 makes tool use visible.
 
@@ -229,37 +229,6 @@ Plans:
 5. Non-task messages (e.g. "what's your name?") show no tool call cards — just a streamed text reply
 6. The full sequence — tool cards → text stream — feels coherent and natural, not jarring
 
----
-
-### Phase 9: Thesys Generative UI
-
-**Goal:** Replace static tool call cards with Thesys-powered generative UI — the AI can respond with rich, interactive UI components (tables, charts, forms, cards) rendered inline in the chat, making agent output dramatically more useful than plain text.
-
-**Depends on:** Phase 8
-
-**Key work:**
-
-- Install and configure Thesys SDK (`@thesys/sdk` or equivalent) with the project API key
-- Replace or augment the existing `ToolCallCard`/`Tool` rendering with Thesys component renderer
-- Update `createServerFn` chat handler to pass Thesys-compatible structured output alongside streamed text
-- Per-agent Thesys UI definitions: Chief of Staff → meeting cards, action items; Designer → image/mockup previews; Finance → data tables, charts; Legal → document summaries, clause cards
-- Wire Thesys render output into `ChatMessage` — render generative components inline above or below the streamed text response
-- Ensure Thesys API key is server-side only — never exposed in the client bundle
-
-**Plans:**
-
-- [ ] 01-PLAN.md — Thesys SDK integration + per-agent UI definitions + chat renderer wiring
-
-**Success Criteria — All must be TRUE:**
-
-1. Sending a task message triggers a Thesys-rendered UI component inline in the chat (not just plain text)
-2. Each agent produces role-appropriate generative UI (e.g. Finance shows a data table, Designer shows a visual card)
-3. Thesys API key is server-side only — `grep -r "THESYS" dist/` returns no matches
-4. Generative UI components render correctly in both light and dark mode using semantic tokens
-5. Existing plain-text streaming and tool call flow remain intact for non-generative responses
-
----
-
 ## Progress
 
 | Phase                               | Status      | Completed  |
@@ -272,9 +241,8 @@ Plans:
 | 6. Chat History Sidebar             | ✅ Complete | 2026-02-19 |
 | 7. Floating Sidebar Redesign        | ✅ Complete | 2026-02-20 |
 | 8. Pseudo-Tool Calling              | ✅ Complete | 2026-02-20 |
-| 9. Thesys Generative UI             | ⏳ Pending  |            |
 
-**Execution order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
+**Execution order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 ---
 

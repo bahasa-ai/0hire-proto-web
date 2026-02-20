@@ -285,9 +285,8 @@ Import: `useState` from react; `Agent`, `AGENTS`, `DEFAULT_AGENT_ID` from `./age
 Replace current content entirely:
 
 ```tsx
-import { createFileRoute } from '@tanstack/react-router'
-
 import { WorkspaceLayout } from '@/components/workspace/workspace-layout'
+import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({ component: WorkspaceLayout })
 ```

@@ -1,10 +1,8 @@
-import { useState } from 'react'
-
 import { Collapsible } from '@base-ui/react/collapsible'
 import { code } from '@streamdown/code'
 import { ChevronRight } from 'lucide-react'
+import { useState } from 'react'
 import { Streamdown } from 'streamdown'
-
 import { cn } from '@/lib/utils'
 
 interface ReasoningProps {

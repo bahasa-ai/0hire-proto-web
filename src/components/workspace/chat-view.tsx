@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
 import { code } from '@streamdown/code'
 import {
   ArrowUp,
@@ -11,6 +10,7 @@ import {
   Trash,
   X,
 } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Streamdown } from 'streamdown'
 import { AGENT_SYSTEM_PROMPTS } from './agents'
 import { EmptyChat } from './empty-chat'
@@ -19,17 +19,14 @@ import {
   getActiveMessages,
   useWorkspace,
 } from './workspace-context'
-import type { Agent } from './agents'
-import type { ChatMessage } from './workspace-context'
 import type { ToolPart } from '@/components/prompt-kit/tool'
 import type { StreamChunk } from '@/server/chat'
-
-
-
+import type { Agent } from './agents'
 import {
   ChatContainerContent,
   ChatContainerRoot,
 } from '@/components/prompt-kit/chat-container'
+import { TextShimmerLoader } from '@/components/prompt-kit/loader'
 import {
   Message,
   MessageAction,
@@ -54,7 +51,7 @@ import { Tool } from '@/components/prompt-kit/tool'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { streamChatFn } from '@/server/chat'
-
+import type { ChatMessage } from './workspace-context'
 
 type ChatErrorType = 'rate-limited' | 'network' | 'timeout' | 'generic' | null
 
@@ -84,6 +81,19 @@ function makeMessage(
     agentId,
     timestamp: Date.now(),
     ...extra,
+  }
+}
+
+function toolCallState(
+  status: 'running' | 'done' | 'error',
+): ToolPart['state'] {
+  switch (status) {
+    case 'running':
+      return 'input-streaming'
+    case 'done':
+      return 'output-available'
+    case 'error':
+      return 'output-error'
   }
 }
 
@@ -335,13 +345,13 @@ export function ChatView({
 
   const handleSubmit = useCallback(() => handleSend(input), [input, handleSend])
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     if (event.target.files) {
       setFiles(prev => [...prev, ...Array.from(event.target.files!)])
     }
   }
 
-  const handleRemoveFile = (index: number) => {
+  function handleRemoveFile(index: number) {
     setFiles(prev => prev.filter((_, i) => i !== index))
     if (uploadInputRef.current) {
       uploadInputRef.current.value = ''
@@ -367,7 +377,7 @@ export function ChatView({
                     <p className="text-muted-foreground text-[11px]">
                       {formatTime(msg.timestamp)}
                     </p>
-                    <MessageContent className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed">
+                    <MessageContent className="bg-muted text-foreground rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed">
                       {msg.content}
                     </MessageContent>
                     <MessageActions className="flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
@@ -443,21 +453,18 @@ export function ChatView({
                     )}
                     {msg.toolCalls && msg.toolCalls.length > 0 && (
                       <div className="mb-2">
-                        {msg.toolCalls.map(tc => {
-                          const toolPart: ToolPart = {
-                            type: tc.name,
-                            state:
-                              tc.status === 'running'
-                                ? 'input-streaming'
-                                : tc.status === 'done'
-                                  ? 'output-available'
-                                  : 'output-error',
-                            input: tc.input,
-                            output: tc.output,
-                            toolCallId: tc.id,
-                          }
-                          return <Tool key={tc.id} toolPart={toolPart} />
-                        })}
+                        {msg.toolCalls.map(tc => (
+                          <Tool
+                            key={tc.id}
+                            toolPart={{
+                              type: tc.name,
+                              state: toolCallState(tc.status),
+                              input: tc.input,
+                              output: tc.output,
+                              toolCallId: tc.id,
+                            }}
+                          />
+                        ))}
                       </div>
                     )}
                     <MessageContent className="text-foreground rounded-none bg-transparent p-0 text-sm leading-relaxed">
@@ -514,9 +521,7 @@ export function ChatView({
                       {agent.name}
                     </span>
                   </div>
-                  <TextShimmer className="text-sm font-medium">
-                    Thinking
-                  </TextShimmer>
+                  <TextShimmerLoader text="Thinking" size="md" />
                 </div>
               </div>
             )}
@@ -558,9 +563,7 @@ export function ChatView({
                     onClick={e => e.stopPropagation()}
                   >
                     <Paperclip className="size-4" />
-                    <span className="max-w-[120px] truncate">
-                      {file.name}
-                    </span>
+                    <span className="max-w-[120px] truncate">{file.name}</span>
                     <button
                       type="button"
                       onClick={() => handleRemoveFile(index)}

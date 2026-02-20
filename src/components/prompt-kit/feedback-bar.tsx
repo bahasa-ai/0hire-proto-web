@@ -1,5 +1,4 @@
 import { ThumbsDown, ThumbsUp, X } from 'lucide-react'
-
 import { cn } from '@/lib/utils'
 
 type FeedbackBarProps = {

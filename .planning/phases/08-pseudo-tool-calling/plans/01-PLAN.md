@@ -52,16 +52,6 @@ Copy the prompt-kit `Tool` component verbatim with two modifications:
 2. Replace hardcoded color classes with semantic tokens where possible (keep blue/green/red/orange for status — these are intentional status semantics, not brand colors, so they're acceptable as-is per the existing codebase pattern in `task-board.tsx`)
 
 ```tsx
-import { useState } from 'react'
-
-import {
-  CheckCircle,
-  ChevronDown,
-  Loader2,
-  Settings,
-  XCircle,
-} from 'lucide-react'
-
 import { Button } from '@/components/ui/button'
 import {
   Collapsible,
@@ -69,6 +59,14 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
+import {
+  CheckCircle,
+  ChevronDown,
+  Loader2,
+  Settings,
+  XCircle,
+} from 'lucide-react'
+import { useState } from 'react'
 
 export type ToolPart = {
   type: string
@@ -683,7 +681,6 @@ In the agent message render block (`msg.role === 'agent'` branch), above `<Messa
 
 ```tsx
 import type { ToolPart } from '@/components/prompt-kit/tool'
-
 import { Tool } from '@/components/prompt-kit/tool'
 
 // In the JSX, above <MessageContent>:

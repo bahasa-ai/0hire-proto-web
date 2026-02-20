@@ -1,7 +1,5 @@
 import { Search, Settings2 } from 'lucide-react'
 import type { Agent } from './agents'
-
-
 import { cn } from '@/lib/utils'
 
 interface ChannelHeaderProps {

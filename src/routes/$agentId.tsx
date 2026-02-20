@@ -1,5 +1,4 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
-
 import { AGENTS, DEFAULT_AGENT_ID } from '@/components/workspace/agents'
 
 export const Route = createFileRoute('/$agentId')({

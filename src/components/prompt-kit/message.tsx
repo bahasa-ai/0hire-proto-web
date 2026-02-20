@@ -56,7 +56,7 @@ const MessageContent = ({
   return (
     <div
       className={cn(
-        'text-foreground bg-secondary rounded-lg p-2 break-words whitespace-normal',
+        'text-foreground bg-secondary wrap-break-words rounded-lg p-2 whitespace-normal',
         className,
       )}
       {...props}

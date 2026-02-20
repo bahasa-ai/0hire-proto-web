@@ -438,7 +438,6 @@ Create the directory `src/server/` and the file `src/server/chat.ts`:
 
 ```typescript
 import type { ChatMessage } from '@/components/workspace/workspace-context'
-
 import { GoogleGenAI } from '@google/genai'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'

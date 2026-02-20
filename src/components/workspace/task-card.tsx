@@ -1,8 +1,6 @@
 import { AlertTriangle, Bell, CheckCircle2, Clock, Loader2 } from 'lucide-react'
-import type { Task, TaskStatus } from './tasks'
 import type { LucideIcon } from 'lucide-react'
-
-
+import type { Task, TaskStatus } from './tasks'
 import { cn } from '@/lib/utils'
 
 // Relative timestamp — lives here since tasks.ts is a pure data module

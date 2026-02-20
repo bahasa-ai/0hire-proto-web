@@ -1,7 +1,6 @@
 import { createContext, useContext, useReducer } from 'react'
 import type { ReactNode } from 'react'
 
-
 export interface ToolCall {
   id: string
   name: string

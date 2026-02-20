@@ -1,13 +1,6 @@
+import { CheckCircle, ChevronDown, Settings, XCircle } from 'lucide-react'
 import { useState } from 'react'
-
-import {
-  CheckCircle,
-  ChevronDown,
-  Loader2,
-  Settings,
-  XCircle,
-} from 'lucide-react'
-
+import { TextShimmerLoader, WaveLoader } from '@/components/prompt-kit/loader'
 import {
   Collapsible,
   CollapsibleContent,
@@ -41,7 +34,7 @@ export function Tool({ toolPart, defaultOpen = false, className }: ToolProps) {
   const getStateIcon = () => {
     switch (state) {
       case 'input-streaming':
-        return <Loader2 className="size-3.5 animate-spin text-blue-500" />
+        return <WaveLoader size="sm" className="[&>div]:bg-blue-500" />
       case 'input-available':
         return <Settings className="size-3.5 text-orange-500" />
       case 'output-available':
@@ -151,9 +144,7 @@ export function Tool({ toolPart, defaultOpen = false, className }: ToolProps) {
               </div>
             )}
             {state === 'input-streaming' && (
-              <div className="text-muted-foreground text-sm">
-                Processing tool call…
-              </div>
+              <TextShimmerLoader text="Working" size="sm" />
             )}
             {toolCallId && (
               <div className="text-muted-foreground border-t pt-2 text-xs">

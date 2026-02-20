@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-**Phase 9: Thesys Generative UI** — pending.
+**Milestone complete.** All 8 phases shipped. No pending phases.
 
 ## Execution History
 
@@ -44,9 +44,9 @@
 
 ## Next Action
 
-Run `/gsd:plan-phase` to plan Phase 9: Thesys Generative UI.
+Milestone complete. Use `/gsd:new-milestone` to start the next milestone or `/gsd:add-phase` to queue new work.
 
 ---
 
 _Last updated: 2026-02-20_
-_Last session: Added Phase 9 (Thesys Generative UI) to roadmap_
+_Last session: Scrapped Phase 9 (Thesys Generative UI) — integration requires full server-side rewrite and breaks existing tool call UX_

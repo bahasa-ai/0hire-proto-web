@@ -1,12 +1,9 @@
-
-import React from 'react'
-
 import { cva } from 'class-variance-authority'
 import { AlertCircle, AlertTriangle, Info } from 'lucide-react'
+import React from 'react'
 import type { VariantProps } from 'class-variance-authority'
-
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 const systemMessageVariants = cva(
   'flex flex-row items-center gap-3 rounded-[12px] border py-2 pr-2 pl-3',

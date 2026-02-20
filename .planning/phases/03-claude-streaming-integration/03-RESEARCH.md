@@ -157,7 +157,6 @@ The async generator approach is cleaner than ReadableStream for AI streaming.
 ```typescript
 // src/server/chat.ts
 import type { ChatMessage } from '@/components/workspace/workspace-context'
-
 import { GoogleGenAI } from '@google/genai'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
@@ -430,9 +429,8 @@ https://github.com/ibelick/prompt-kit/blob/main/components/prompt-kit/loader.tsx
 ### Full Source to Add at `src/components/prompt-kit/loader.tsx`
 
 ```tsx
-import React from 'react'
-
 import { cn } from '@/lib/utils'
+import React from 'react'
 
 export interface LoaderProps {
   variant?:

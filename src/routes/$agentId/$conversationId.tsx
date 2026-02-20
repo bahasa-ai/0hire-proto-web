@@ -1,7 +1,5 @@
-import { useEffect } from 'react'
-
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
-
+import { useEffect } from 'react'
 import { AGENTS, DEFAULT_AGENT_ID } from '@/components/workspace/agents'
 import { ChatView } from '@/components/workspace/chat-view'
 import { useWorkspace } from '@/components/workspace/workspace-context'

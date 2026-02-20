@@ -1,7 +1,5 @@
 'use client'
 
-import * as React from 'react'
-
 import {
   BellIcon,
   BluetoothIcon,
@@ -32,7 +30,7 @@ import {
   SunIcon,
   UserIcon,
 } from 'lucide-react'
-
+import * as React from 'react'
 import { Example, ExampleWrapper } from '@/components/example'
 import {
   AlertDialog,

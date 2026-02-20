@@ -7,23 +7,21 @@ import {
   useMatches,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
-
 import 'streamdown/styles.css'
-
 import appCss from '../styles.css?url'
+import { TaskStack } from '@/components/workspace/task-stack'
 import {
   WorkspaceProvider,
   useWorkspace,
 } from '@/components/workspace/workspace-context'
 import { WorkspaceSidebar } from '@/components/workspace/workspace-sidebar'
 
-
 export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Zero Hire' },
+      { title: 'Øhire' },
       { name: 'description', content: 'Your AI team workspace' },
     ],
     links: [{ rel: 'stylesheet', href: appCss }],
@@ -49,10 +47,11 @@ function ChatTitleBar() {
   const title = state.conversations[agentId]?.[conversationId]?.title // eslint-disable-line @typescript-eslint/no-unnecessary-condition
 
   return (
-    <div className="flex h-13.5 shrink-0 items-center border-b px-4">
-      <span className="text-foreground truncate text-sm font-medium">
+    <div className="relative z-10 flex h-13.5 shrink-0 items-center border-b px-4">
+      <span className="text-foreground min-w-0 flex-1 truncate text-sm font-medium">
         {title || 'New conversation'}
       </span>
+      <TaskStack agentId={agentId} conversationId={conversationId} />
     </div>
   )
 }
@@ -62,7 +61,7 @@ function RootComponent() {
     <WorkspaceProvider>
       <div className="animate-in fade-in flex h-svh p-3 duration-300">
         <WorkspaceSidebar />
-          <main className="flex min-w-0 flex-1 flex-col">
+        <main className="flex min-w-0 flex-1 flex-col">
           <ChatTitleBar />
           <Outlet />
         </main>
