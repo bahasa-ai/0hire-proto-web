@@ -49,7 +49,6 @@ import { SystemMessage } from '@/components/prompt-kit/system-message'
 import { TextShimmer } from '@/components/prompt-kit/text-shimmer'
 import { Tool } from '@/components/prompt-kit/tool'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import { streamChatFn } from '@/server/chat'
 import type { ChatMessage } from './workspace-context'
 
@@ -110,19 +109,6 @@ function formatTime(ts: number): string {
     minute: '2-digit',
     hour12: true,
   })
-}
-
-function AgentAvatar({ agent }: { agent: Agent }) {
-  return (
-    <span
-      className={cn(
-        'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full text-sm',
-        agent.accentColor,
-      )}
-    >
-      {agent.emoji}
-    </span>
-  )
 }
 
 export function ChatView({
@@ -414,14 +400,10 @@ export function ChatView({
               ) : (
                 <Message
                   key={msg.id}
-                  className="mx-auto flex w-full max-w-3xl items-start gap-3 px-2 py-1.5"
+                  className="mx-auto flex w-full max-w-3xl flex-col px-2 py-1.5"
                 >
-                  <AgentAvatar agent={agent} />
-                  <div className="group min-w-0 flex-1">
+                  <div className="group min-w-0">
                     <div className="mb-0.5 flex items-baseline gap-2">
-                      <span className="text-foreground text-sm font-semibold">
-                        {agent.name}
-                      </span>
                       <span className="text-muted-foreground text-[11px]">
                         {formatTime(msg.timestamp)}
                       </span>
@@ -513,16 +495,8 @@ export function ChatView({
             })}
 
             {isWaitingForFirstToken && (
-              <div className="mx-auto flex w-full max-w-3xl items-start gap-3 px-2 py-1.5">
-                <AgentAvatar agent={agent} />
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1.5 flex items-baseline gap-2">
-                    <span className="text-foreground text-sm font-semibold">
-                      {agent.name}
-                    </span>
-                  </div>
-                  <TextShimmerLoader text="Thinking" size="md" />
-                </div>
+              <div className="mx-auto flex w-full max-w-3xl px-2 py-1.5">
+                <TextShimmerLoader text="Thinking" size="md" />
               </div>
             )}
           </ChatContainerContent>
