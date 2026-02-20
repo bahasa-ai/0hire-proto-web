@@ -2,9 +2,9 @@
 
 ## Overview
 
-Four-phase build from static shell to fully functional AI workspace. Phase 1 is complete. The remaining phases wire up real chat (Phase 2), live Claude streaming (Phase 3), the agent task board (Phase 4), and production polish (Phase 5).
+Eight-phase build from static shell to fully functional AI workspace. Phases 1–7 are complete. Phase 8 adds pseudo-tool calling — simulated action cards that show the agent visibly working through steps when given a task.
 
-The single core value — a non-technical operator can talk to their AI team and see exactly what it's doing — is realized after Phase 4. Phase 5 makes it demo-ready.
+The single core value — a non-technical operator can talk to their AI team and see exactly what it's doing — is realized after Phase 4. Phase 5 makes it demo-ready. Phase 6 adds conversation management. Phase 7 floats the sidebar. Phase 8 makes tool use visible.
 
 ---
 
@@ -144,6 +144,93 @@ Plans:
 
 ---
 
+### Phase 6: Chat History Sidebar
+
+**Goal:** Replace placeholder sidebar history items with real per-agent conversation history — users can start multiple conversations per agent, switch between them, and see a scrollable history list derived from actual messages.
+
+**Depends on:** Phase 5
+
+**Key work:**
+
+- Restructure `WorkspaceState` to support multiple conversations per agent (`Record<string, Record<string, ChatMessage[]>>`) with active conversation tracking
+- Derive conversation titles from first user message
+- Wire sidebar history items to real conversation list from state
+- "New chat" button to start a fresh conversation per agent
+- Conversation switching — clicking a history item loads that conversation
+- Wire rename/delete dropdown actions to dispatch state updates
+
+Plans:
+
+- [x] 01-PLAN.md — Multi-conversation state + sidebar wiring
+
+**Success Criteria — All must be TRUE:**
+
+1. Each agent supports multiple independent conversations
+2. Sidebar history list shows real conversations titled by first user message
+3. Clicking a history item switches to that conversation's messages
+4. Starting a "new chat" clears the active conversation and shows the empty state
+5. Rename and delete actions in the dropdown menu work on conversation entries
+
+---
+
+### Phase 7: Floating Sidebar Redesign
+
+**Goal:** Give the sidebar a modern, floating appearance — rounded corners, inset padding, and visual separation from the main content area — so it feels detached and elevated rather than flush to the edge.
+
+**Depends on:** Phase 6
+
+**Key work:**
+
+- Wrap sidebar content in a rounded, padded container with a gap from the viewport edges
+- Apply subtle background, border, and/or shadow to make the sidebar visually "float"
+- Ensure the floating style works in both light and dark mode using semantic color tokens
+- Preserve all existing sidebar functionality (agent list, status badges, history items, new chat button)
+
+**Plans:**
+
+- [ ] 01-PLAN.md — Floating sidebar visual treatment
+
+**Success Criteria — All must be TRUE:**
+
+1. Sidebar has visible padding/margin separating it from all viewport edges
+2. Sidebar container has rounded corners on all sides
+3. Sidebar visually appears elevated/detached from the main content panel
+4. No sidebar functionality is broken (switching, history, status badges)
+5. Design works correctly in both light and dark mode
+
+---
+
+### Phase 8: Pseudo-Tool Calling
+
+**Goal:** When a user sends a task-oriented message (e.g., "Create a presentation on Q4 results"), the agent visually steps through simulated tool calls in the chat — showing exactly what it's "doing" before delivering the final response. This makes the black box transparent without requiring real tool infrastructure.
+
+**Depends on:** Phase 7
+
+**Key work:**
+
+- `ToolCallCard` component — shows tool name, status icon (spinner → check/error), and collapsible output/result text; sourced from prompt-kit's `Tool` component pattern
+- `ToolCallGroup` — wraps a sequence of `ToolCallCard` entries inside an agent message; animates each card through pending → running → done with ~500ms stagger
+- Extend `ChatMessage` with a `toolCalls` field: `Array<{ id, name, status, args?, result? }>`
+- Add `APPEND_TOOL_CALL` and `UPDATE_TOOL_CALL` dispatch actions to `WorkspaceContext`
+- Keyword detection in `chat-view.tsx`: if the user message matches task-oriented patterns (e.g., "create", "draft", "build", "make", "generate"), trigger a tool call sequence before streaming the text reply
+- Per-agent tool call libraries (`tasks.ts` or new `tool-calls.ts`): define 3–5 realistic tool sequences per agent role (e.g., Chief of Staff → web_search, draft_doc, send_email; Designer → search_templates, generate_mockup, export_pdf)
+- Tool call animation: cards appear sequentially with a stagger; each card transitions from "Running…" spinner to "Done" checkmark as the sequence progresses; the text response streams in after all tool calls complete
+
+**Plans:**
+
+- [x] 01-PLAN.md — Tool call message type + ToolCallCard + per-agent sequences + chat-view integration
+
+**Success Criteria — All must be TRUE:**
+
+1. Sending a task-oriented message (e.g. "create a presentation") triggers at least 2 visible tool call cards before the agent text reply
+2. Each tool card cycles through: pending (grey) → running (spinner) → done (green check) or error (red X)
+3. Tool call cards are collapsed by default; clicking expands to show args/result details
+4. Different agents show different, role-appropriate tool names (e.g. Designer gets "search_templates", Finance gets "pull_financials")
+5. Non-task messages (e.g. "what's your name?") show no tool call cards — just a streamed text reply
+6. The full sequence — tool cards → text stream — feels coherent and natural, not jarring
+
+---
+
 ## Progress
 
 | Phase                               | Status      | Completed  |
@@ -153,8 +240,11 @@ Plans:
 | 3. Claude Streaming Integration     | ✅ Complete | 2026-02-19 |
 | 4. Task Board + Agent Status Badges | ✅ Complete | 2026-02-19 |
 | 5. Polish + Production Hardening    | ✅ Complete | 2026-02-19 |
+| 6. Chat History Sidebar             | ✅ Complete | 2026-02-19 |
+| 7. Floating Sidebar Redesign        | ✅ Complete | 2026-02-20 |
+| 8. Pseudo-Tool Calling              | ✅ Complete | 2026-02-20 |
 
-**Execution order:** 1 → 2 → 3 → 4 → 5
+**Execution order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 ---
 
@@ -172,6 +262,7 @@ Plans:
 | `Loader`              | 3     | Thinking indicator (pre-first-token)               |
 | `Markdown`            | 3     | Agent response markdown rendering                  |
 | `Reasoning`           | 3+    | Optional CoT display (if Claude returns reasoning) |
+| `Tool` (pattern)      | 8     | Tool call card — name, status, collapsible result  |
 
 ---
 
