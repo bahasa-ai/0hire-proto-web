@@ -60,9 +60,9 @@ function ChatTitleBar() {
 function RootComponent() {
   return (
     <WorkspaceProvider>
-      <div className="animate-in fade-in flex h-svh overflow-hidden p-3 duration-300">
+      <div className="animate-in fade-in flex h-svh p-3 duration-300">
         <WorkspaceSidebar />
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
+          <main className="flex min-w-0 flex-1 flex-col">
           <ChatTitleBar />
           <Outlet />
         </main>

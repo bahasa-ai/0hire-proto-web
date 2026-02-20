@@ -41,64 +41,31 @@ export function Tool({ toolPart, defaultOpen = false, className }: ToolProps) {
   const getStateIcon = () => {
     switch (state) {
       case 'input-streaming':
-        return <Loader2 className="size-4 animate-spin text-blue-500" />
+        return <Loader2 className="size-3.5 animate-spin text-blue-500" />
       case 'input-available':
-        return <Settings className="size-4 text-orange-500" />
+        return <Settings className="size-3.5 text-orange-500" />
       case 'output-available':
-        return <CheckCircle className="size-4 text-green-500" />
+        return <CheckCircle className="size-3.5 text-green-500" />
       case 'output-error':
-        return <XCircle className="size-4 text-red-500" />
+        return <XCircle className="size-3.5 text-red-500" />
     }
   }
 
-  const getStateBadge = () => {
-    const base = 'px-2 py-0.5 rounded-full text-xs font-medium'
-    switch (state) {
-      case 'input-streaming':
-        return (
-          <span
-            className={cn(
-              base,
-              'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-            )}
-          >
-            Processing
-          </span>
-        )
-      case 'input-available':
-        return (
-          <span
-            className={cn(
-              base,
-              'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-            )}
-          >
-            Ready
-          </span>
-        )
-      case 'output-available':
-        return (
-          <span
-            className={cn(
-              base,
-              'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-            )}
-          >
-            Completed
-          </span>
-        )
-      case 'output-error':
-        return (
-          <span
-            className={cn(
-              base,
-              'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-            )}
-          >
-            Error
-          </span>
-        )
-    }
+  // Human-readable title from input.title, falling back to humanized function name
+  const getTitle = () => {
+    if (input?.title && typeof input.title === 'string') return input.title
+    return toolPart.type
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase())
+  }
+
+  // Strip the leading verb (create_, generate_, build_, draft_, etc.) to get the task type noun
+  const getTaskType = () => {
+    const stripped = toolPart.type.replace(
+      /^(create|generate|build|draft|make|get|fetch|run|execute)_/,
+      '',
+    )
+    return stripped.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
   }
 
   const formatValue = (value: unknown): string => {
@@ -117,20 +84,29 @@ export function Tool({ toolPart, defaultOpen = false, className }: ToolProps) {
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger
           className={cn(
-            'bg-background flex h-auto w-full cursor-pointer items-center justify-between rounded-none px-3 py-2 font-normal',
-            'hover:bg-accent/50 transition-colors',
+            'bg-muted/40 flex h-auto w-full cursor-pointer items-center justify-between rounded-none px-3 py-2.5 font-normal',
+            'hover:bg-muted/60 transition-colors',
           )}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             {getStateIcon()}
-            <span className="font-mono text-sm font-medium">
-              {toolPart.type}
-            </span>
-            {getStateBadge()}
+            <div className="flex flex-col items-start gap-1">
+              <div className="flex items-center gap-1.5">
+                <span className="text-muted-foreground text-[10px] font-semibold tracking-widest uppercase">
+                  Task
+                </span>
+                <span className="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[10px] leading-none font-medium">
+                  {getTaskType()}
+                </span>
+              </div>
+              <span className="text-foreground text-sm leading-none font-medium">
+                {getTitle()}
+              </span>
+            </div>
           </div>
           <ChevronDown
             className={cn(
-              'size-4 transition-transform duration-200',
+              'text-muted-foreground size-4 transition-transform duration-200',
               isOpen && 'rotate-180',
             )}
           />

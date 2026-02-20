@@ -24,7 +24,9 @@ function ChatContainerRoot({
 }: ChatContainerRootProps) {
   return (
     <StickToBottom
-      className={cn('relative overflow-y-auto', className)}
+      className={cn('flex overflow-y-auto', className)}
+      resize="smooth"
+      initial="instant"
       role="log"
       {...props}
     >
@@ -40,7 +42,7 @@ function ChatContainerContent({
 }: ChatContainerContentProps) {
   return (
     <StickToBottom.Content
-      className={cn('flex flex-col', className)}
+      className={cn('flex w-full flex-col', className)}
       {...props}
     >
       {children}
@@ -52,7 +54,13 @@ function ChatContainerScrollAnchor({
   className,
   ...props
 }: ChatContainerScrollAnchorProps) {
-  return <div className={cn('h-1 w-full shrink-0', className)} {...props} />
+  return (
+    <div
+      className={cn('h-px w-full shrink-0 scroll-mt-4', className)}
+      aria-hidden="true"
+      {...props}
+    />
+  )
 }
 
 export { ChatContainerRoot, ChatContainerContent, ChatContainerScrollAnchor }

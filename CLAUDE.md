@@ -7,6 +7,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **TanStack (Router, Start, Query, Table, Form):** Use `mcp__tanstack__tanstack_search_docs` or `mcp__tanstack__tanstack_doc` — prefer this over context7 for anything TanStack-related
 - **All other libraries:** Use `mcp__context7__resolve-library-id` first, then `mcp__context7__query-docs`
 
+## UI Component Generation (Magic MCP)
+
+Use the `user-Magic MCP` server for generating and refining UI components:
+
+- **New component:** `21st_magic_component_builder` — triggered by `/ui`, `/21`, `/21st`, or any request for a button, input, dialog, card, form, etc. Returns a snippet; integrate it into the codebase after.
+- **Refine/redesign:** `21st_magic_component_refiner` — use when asked to improve or redesign an existing React component or molecule (not full pages).
+- **Logo search:** `logo_search` — find brand/company logos.
+- **Inspiration:** `21st_magic_component_inspiration` — browse component inspiration from 21st.dev.
+
 ---
 
 ## Project Overview

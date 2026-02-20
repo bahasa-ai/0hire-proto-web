@@ -22,6 +22,7 @@ The roadmap references Anthropic SDK and `ANTHROPIC_API_KEY`, but the chosen pro
 **Tone:** Professional but warm across all four agents — capable, clear, approachable. Each agent has their own distinct flavor within this baseline.
 
 **Company context:** Rich, hardcoded fake company context baked into every system prompt. Include:
+
 - A realistic company name (researcher to invent a plausible Series A tech startup)
 - Stage: early-stage / Series A
 - Headcount: ~25 employees
@@ -30,29 +31,32 @@ The roadmap references Anthropic SDK and `ANTHROPIC_API_KEY`, but the chosen pro
 **Length/depth:** Do what produces the highest quality responses. No strict token target — the researcher should evaluate what caliber of system prompt yields the most useful, distinct responses from each persona.
 
 **Formatting instructions in system prompts:**
+
 - Instruct agents to use markdown: headers (`##`), bold, bullets, inline code, fenced code blocks where contextually appropriate
 - Keep responses concise — avoid walls of text; prefer structured answers
 - Optimize for how prompt-kit's `Markdown` component (and Streamdown — see Area 3) renders output
 
 **The four agents:**
 
-| Agent | Role | Persona flavor |
-| ------------------- | ----------------------- | --------------------------------------------------- |
+| Agent          | Role                  | Persona flavor                                       |
+| -------------- | --------------------- | ---------------------------------------------------- |
 | Chief of Staff | Operations / strategy | Decisive, big-picture, bridges cross-functional gaps |
-| Designer | Product / UX design | Visual thinker, opinionated on craft, concise |
-| Finance | CFO-level finance | Numbers-first, precise, flags risks clearly |
-| Legal | General counsel | Careful, qualifying, risk-aware but actionable |
+| Designer       | Product / UX design   | Visual thinker, opinionated on craft, concise        |
+| Finance        | CFO-level finance     | Numbers-first, precise, flags risks clearly          |
+| Legal          | General counsel       | Careful, qualifying, risk-aware but actionable       |
 
 ---
 
 ## 3. Streaming UX Behavior
 
 **Thinking indicator (pre-first-token):**
+
 - Show prompt-kit `Loader` from the moment the message is sent until the first token arrives
 - On first token: fade out `Loader`, message bubble fades in with the streaming content
 - Loader lives outside the bubble; bubble pre-renders and fades in on first token
 
 **Markdown rendering during streaming:**
+
 - Use `streamdown` (`vercel/streamdown`) — a drop-in `react-markdown` replacement purpose-built for AI streaming
 - Handles incomplete/unterminated markdown syntax gracefully (no flicker on partial code fences, etc.)
 - Block-level memoization: stable completed blocks do not re-render on new token arrival
@@ -60,11 +64,13 @@ The roadmap references Anthropic SDK and `ANTHROPIC_API_KEY`, but the chosen pro
 - This replaces any use of plain `react-markdown` in the project
 
 **Scroll behavior:**
+
 - Smart auto-scroll: if the user is at (or near) the bottom of the chat, auto-follow the growing message
 - If the user has scrolled up to read earlier messages, do NOT force-scroll them down during streaming
 - Resume auto-follow when user manually scrolls back to the bottom
 
 **Abort / channel switch mid-stream:**
+
 - Cancelling a stream (by switching agents or unmounting) should preserve the partial message in that agent's history
 - Mark the partial message visually as incomplete (e.g., a small "interrupted" label or faded state)
 - The request is aborted server-side — no orphaned API calls
@@ -74,23 +80,26 @@ The roadmap references Anthropic SDK and `ANTHROPIC_API_KEY`, but the chosen pro
 ## 4. Error Handling Surface
 
 **Error placement:**
+
 - Persistent banner directly below the input bar (not inside the message bubble, not a toast)
 - Stays visible until the user retries or sends a new message
 
 **Error copy — typed messages per error class:**
 
-| Error type | User-facing message |
-| ------------ | --------------------------------------------------- |
-| Rate limited | "Rate limited — wait a moment before trying again." |
-| Network/offline | "Connection lost — check your network and retry." |
-| Timeout (>10s) | "Response timed out — try again." |
-| Generic/unknown | "Something went wrong. Try again." |
+| Error type      | User-facing message                                 |
+| --------------- | --------------------------------------------------- |
+| Rate limited    | "Rate limited — wait a moment before trying again." |
+| Network/offline | "Connection lost — check your network and retry."   |
+| Timeout (>10s)  | "Response timed out — try again."                   |
+| Generic/unknown | "Something went wrong. Try again."                  |
 
 **Retry behavior:**
+
 - Retry re-sends the full conversation history including the failed user message
 - This is the natural stateless approach — the server function always receives the full thread
 
 **Sending a new message after an error:**
+
 - Error banner clears automatically when the user sends a new message
 - The new send is treated as an implicit retry (error state is not preserved in history)
 

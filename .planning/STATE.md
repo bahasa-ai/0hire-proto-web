@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-**Phase 8: Pseudo-Tool Calling** — complete.
+**Phase 9: Thesys Generative UI** — pending.
 
 ## Execution History
 
@@ -19,21 +19,21 @@
 
 ## Key Decisions Log
 
-| Date       | Decision                                                      | Rationale                                                                                    |
-| ---------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| 2026-02-19 | Per-agent to-do list (not Kanban)                             | RFC-0003 team decision — Kanban foreign to normie target users                               |
-| 2026-02-19 | prompt-kit for all chat UI components                         | Purpose-built for AI interfaces; avoids reinventing message bubbles/streaming                |
-| 2026-02-19 | TanStack Start `createServerFn` for Claude API                | Keeps API key server-side; aligns with existing stack                                        |
-| 2026-02-19 | Mock responses in Phase 2, real Claude in Phase 3             | Derisks chat state implementation before adding streaming complexity                         |
-| 2026-02-19 | 4 predefined agents, no custom agents for MVP                 | Simplest path to demonstrating multi-agent UX                                                |
-| 2026-02-19 | prompt-kit components sourced from GitHub                     | prompt-kit.com registry returned 429; components manually installed from ibelick/prompt-kit  |
-| 2026-02-19 | Google Gemini instead of Anthropic Claude                     | Switched to `@google/genai` with `gemini-2.5-flash-lite`; same streaming contract            |
-| 2026-02-19 | Static module import for task data                            | Tasks are read-only in Phase 4 — direct import avoids prop drilling with no downsides        |
-| 2026-02-19 | `--warning` OKLCH token added to styles.css                   | No amber token existed; added for `needs-input` status — preserves semantic-token convention |
-| 2026-02-20 | Real Gemini function calling (not keyword detection)          | Gemini API `tools: [{ functionDeclarations }]` lets the model decide when to call tools      |
-| 2026-02-20 | CollapsibleTrigger without asChild (base-ui constraint)       | base-ui Trigger renders its own button — no asChild support unlike Radix                     |
+| Date       | Decision                                                       | Rationale                                                                                    |
+| ---------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 2026-02-19 | Per-agent to-do list (not Kanban)                              | RFC-0003 team decision — Kanban foreign to normie target users                               |
+| 2026-02-19 | prompt-kit for all chat UI components                          | Purpose-built for AI interfaces; avoids reinventing message bubbles/streaming                |
+| 2026-02-19 | TanStack Start `createServerFn` for Claude API                 | Keeps API key server-side; aligns with existing stack                                        |
+| 2026-02-19 | Mock responses in Phase 2, real Claude in Phase 3              | Derisks chat state implementation before adding streaming complexity                         |
+| 2026-02-19 | 4 predefined agents, no custom agents for MVP                  | Simplest path to demonstrating multi-agent UX                                                |
+| 2026-02-19 | prompt-kit components sourced from GitHub                      | prompt-kit.com registry returned 429; components manually installed from ibelick/prompt-kit  |
+| 2026-02-19 | Google Gemini instead of Anthropic Claude                      | Switched to `@google/genai` with `gemini-2.5-flash-lite`; same streaming contract            |
+| 2026-02-19 | Static module import for task data                             | Tasks are read-only in Phase 4 — direct import avoids prop drilling with no downsides        |
+| 2026-02-19 | `--warning` OKLCH token added to styles.css                    | No amber token existed; added for `needs-input` status — preserves semantic-token convention |
+| 2026-02-20 | Real Gemini function calling (not keyword detection)           | Gemini API `tools: [{ functionDeclarations }]` lets the model decide when to call tools      |
+| 2026-02-20 | CollapsibleTrigger without asChild (base-ui constraint)        | base-ui Trigger renders its own button — no asChild support unlike Radix                     |
 | 2026-02-20 | tool_call_start as first-chunk trigger for agent message shell | Keeps runStream clean — no separate pre-send shell needed                                    |
-| 2026-02-20 | Stream timeout extended to 60s for tool-call paths           | Tool calls take 5-30s; original 10s timeout would fire before any text yielded               |
+| 2026-02-20 | Stream timeout extended to 60s for tool-call paths             | Tool calls take 5-30s; original 10s timeout would fire before any text yielded               |
 
 ## Active Constraints
 
@@ -44,9 +44,9 @@
 
 ## Next Action
 
-All planned phases complete. Project MVP is ready.
+Run `/gsd:plan-phase` to plan Phase 9: Thesys Generative UI.
 
 ---
 
 _Last updated: 2026-02-20_
-_Last session: Completed 08-pseudo-tool-calling 01-PLAN.md (5 tasks, 7 min)_
+_Last session: Added Phase 9 (Thesys Generative UI) to roadmap_

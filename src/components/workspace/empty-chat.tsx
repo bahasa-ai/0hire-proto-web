@@ -45,7 +45,7 @@ export function EmptyChat({ agent, onSuggestionClick }: EmptyChatProps) {
               variant="outline"
               size="default"
               onClick={() => onSuggestionClick(text)}
-              className="text-foreground/70 hover:text-foreground h-auto flex-col items-start gap-2 rounded-lg p-3 text-left text-sm"
+              className="text-foreground/70 hover:text-foreground bg-muted/30 h-auto flex-col items-start gap-2 rounded-lg p-3 text-left text-sm"
             >
               <Icon className="text-muted-foreground size-4 shrink-0" />
               <span className="line-clamp-2 leading-snug">{text}</span>

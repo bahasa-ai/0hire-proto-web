@@ -161,19 +161,25 @@ export const streamChatFn = createServerFn({ method: 'POST' })
     }))
 
     const agentTools = AGENT_TOOLS[agentId]
-    const toolsConfig =
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- AGENT_TOOLS indexed by agentId may be undefined at runtime
-      agentTools?.length > 0
-        ? { tools: [{ functionDeclarations: agentTools }] }
-        : undefined
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- AGENT_TOOLS indexed by agentId may be undefined at runtime
+    const hasTools = agentTools?.length > 0
     const chat = ai.chats.create({
       model: 'gemini-2.5-flash-lite',
       config: {
-        systemInstruction: systemPrompt,
+        // Append a tool-usage note only when tools are active, so Gemini doesn't
+        // mistake the tool declaration for a restriction on its full capabilities.
+        systemInstruction: hasTools
+          ? `${systemPrompt}\n\nYou have an optional tool available. Only invoke it when the user explicitly asks to create or generate the specific artifact it produces. For all other questions and conversations — including research, advice, opinions, and general discussion — respond normally using your expertise. Never refuse a request just because it doesn't involve the tool.`
+          : systemPrompt,
         temperature: 0.7,
         maxOutputTokens: 2048,
         thinkingConfig: { thinkingBudget: -1, includeThoughts: true },
-        ...toolsConfig,
+        ...(hasTools
+          ? {
+              tools: [{ functionDeclarations: agentTools }],
+              toolConfig: { functionCallingConfig: { mode: 'AUTO' } },
+            }
+          : undefined),
       },
       history,
     })

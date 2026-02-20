@@ -8,6 +8,15 @@ alwaysApply: true
 - **TanStack (Router, Start, Query, Table, Form):** Use the `user-tanstack` MCP — call `tanstack_search_docs` to search or `tanstack_doc` to fetch a specific doc. Always do this before writing any TanStack-specific code.
 - **All other libraries:** Use `user-context7` MCP — call `resolve-library-id` first, then `query-docs`
 
+## UI Component Generation (Magic MCP)
+
+Use the `user-Magic MCP` server for generating and refining UI components:
+
+- **New component:** `21st_magic_component_builder` — triggered by `/ui`, `/21`, `/21st`, or any request for a button, input, dialog, card, form, etc. Returns a snippet; integrate it into the codebase after.
+- **Refine/redesign:** `21st_magic_component_refiner` — use when asked to improve or redesign an existing React component or molecule (not full pages).
+- **Logo search:** `logo_search` — find brand/company logos.
+- **Inspiration:** `21st_magic_component_inspiration` — browse component inspiration from 21st.dev.
+
 ## Project Overview
 
 0hire prototype — a hiring/recruiting dashboard UI. Currently a UI mockup (no backend, all data is hardcoded).

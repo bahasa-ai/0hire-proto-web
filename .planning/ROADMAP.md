@@ -231,6 +231,35 @@ Plans:
 
 ---
 
+### Phase 9: Thesys Generative UI
+
+**Goal:** Replace static tool call cards with Thesys-powered generative UI — the AI can respond with rich, interactive UI components (tables, charts, forms, cards) rendered inline in the chat, making agent output dramatically more useful than plain text.
+
+**Depends on:** Phase 8
+
+**Key work:**
+
+- Install and configure Thesys SDK (`@thesys/sdk` or equivalent) with the project API key
+- Replace or augment the existing `ToolCallCard`/`Tool` rendering with Thesys component renderer
+- Update `createServerFn` chat handler to pass Thesys-compatible structured output alongside streamed text
+- Per-agent Thesys UI definitions: Chief of Staff → meeting cards, action items; Designer → image/mockup previews; Finance → data tables, charts; Legal → document summaries, clause cards
+- Wire Thesys render output into `ChatMessage` — render generative components inline above or below the streamed text response
+- Ensure Thesys API key is server-side only — never exposed in the client bundle
+
+**Plans:**
+
+- [ ] 01-PLAN.md — Thesys SDK integration + per-agent UI definitions + chat renderer wiring
+
+**Success Criteria — All must be TRUE:**
+
+1. Sending a task message triggers a Thesys-rendered UI component inline in the chat (not just plain text)
+2. Each agent produces role-appropriate generative UI (e.g. Finance shows a data table, Designer shows a visual card)
+3. Thesys API key is server-side only — `grep -r "THESYS" dist/` returns no matches
+4. Generative UI components render correctly in both light and dark mode using semantic tokens
+5. Existing plain-text streaming and tool call flow remain intact for non-generative responses
+
+---
+
 ## Progress
 
 | Phase                               | Status      | Completed  |
@@ -243,8 +272,9 @@ Plans:
 | 6. Chat History Sidebar             | ✅ Complete | 2026-02-19 |
 | 7. Floating Sidebar Redesign        | ✅ Complete | 2026-02-20 |
 | 8. Pseudo-Tool Calling              | ✅ Complete | 2026-02-20 |
+| 9. Thesys Generative UI             | ⏳ Pending  |            |
 
-**Execution order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+**Execution order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
 
 ---
 

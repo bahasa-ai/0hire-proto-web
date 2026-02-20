@@ -28,40 +28,40 @@ requirements:
 
 must_haves:
   truths:
-    - "Sending a message produces a streaming token-by-token response from Gemini (not a setTimeout mock)"
-    - "Typing indicator (Loader) shows between send and first token; disappears on first token"
-    - "Agent responses render markdown — headers, bold, bullets, code blocks all display correctly"
+    - 'Sending a message produces a streaming token-by-token response from Gemini (not a setTimeout mock)'
+    - 'Typing indicator (Loader) shows between send and first token; disappears on first token'
+    - 'Agent responses render markdown — headers, bold, bullets, code blocks all display correctly'
     - "Each agent's replies are clearly distinct in personality (Chief of Staff vs Designer vs Finance vs Legal)"
-    - "Switching to a different agent mid-stream aborts the stream and marks the partial message as interrupted"
-    - "After a Gemini failure, a persistent error banner appears below the input with a Retry button"
-    - "GOOGLE_AI_API_KEY never appears in any file under dist/ after bun run build"
+    - 'Switching to a different agent mid-stream aborts the stream and marks the partial message as interrupted'
+    - 'After a Gemini failure, a persistent error banner appears below the input with a Retry button'
+    - 'GOOGLE_AI_API_KEY never appears in any file under dist/ after bun run build'
   artifacts:
-    - path: "src/server/chat.ts"
-      provides: "createServerFn async generator that calls Gemini and yields text chunks"
-      exports: ["streamChatFn"]
-    - path: "src/components/workspace/workspace-context.tsx"
-      provides: "Extended ChatMessage type + START_STREAMING / APPEND_STREAM_CHUNK / FINISH_STREAMING / INTERRUPT_STREAMING reducer actions"
-    - path: "src/components/workspace/agents.ts"
-      provides: "AGENT_SYSTEM_PROMPTS record with full per-agent system prompts for all 4 agents"
-    - path: "src/components/prompt-kit/loader.tsx"
-      provides: "Loader component with typing variant for pre-first-token indicator"
-    - path: "src/components/workspace/error-banner.tsx"
-      provides: "Persistent error banner with typed messages and retry button"
-    - path: "src/components/workspace/chat-view.tsx"
-      provides: "ChatView with real streaming loop, abort-on-switch, Loader state, ErrorBanner, Streamdown rendering"
+    - path: 'src/server/chat.ts'
+      provides: 'createServerFn async generator that calls Gemini and yields text chunks'
+      exports: ['streamChatFn']
+    - path: 'src/components/workspace/workspace-context.tsx'
+      provides: 'Extended ChatMessage type + START_STREAMING / APPEND_STREAM_CHUNK / FINISH_STREAMING / INTERRUPT_STREAMING reducer actions'
+    - path: 'src/components/workspace/agents.ts'
+      provides: 'AGENT_SYSTEM_PROMPTS record with full per-agent system prompts for all 4 agents'
+    - path: 'src/components/prompt-kit/loader.tsx'
+      provides: 'Loader component with typing variant for pre-first-token indicator'
+    - path: 'src/components/workspace/error-banner.tsx'
+      provides: 'Persistent error banner with typed messages and retry button'
+    - path: 'src/components/workspace/chat-view.tsx'
+      provides: 'ChatView with real streaming loop, abort-on-switch, Loader state, ErrorBanner, Streamdown rendering'
   key_links:
-    - from: "src/components/workspace/chat-view.tsx"
-      to: "src/server/chat.ts"
-      via: "streamChatFn({ data: { agentId, messages, systemPrompt } })"
-      pattern: "streamChatFn"
-    - from: "src/server/chat.ts"
-      to: "Gemini API"
-      via: "GoogleGenAI chat.sendMessageStream()"
-      pattern: "sendMessageStream"
-    - from: "src/components/workspace/chat-view.tsx"
-      to: "src/components/workspace/workspace-context.tsx"
-      via: "dispatch(APPEND_STREAM_CHUNK)"
-      pattern: "APPEND_STREAM_CHUNK"
+    - from: 'src/components/workspace/chat-view.tsx'
+      to: 'src/server/chat.ts'
+      via: 'streamChatFn({ data: { agentId, messages, systemPrompt } })'
+      pattern: 'streamChatFn'
+    - from: 'src/server/chat.ts'
+      to: 'Gemini API'
+      via: 'GoogleGenAI chat.sendMessageStream()'
+      pattern: 'sendMessageStream'
+    - from: 'src/components/workspace/chat-view.tsx'
+      to: 'src/components/workspace/workspace-context.tsx'
+      via: 'dispatch(APPEND_STREAM_CHUNK)'
+      pattern: 'APPEND_STREAM_CHUNK'
 ---
 
 <objective>
@@ -108,31 +108,49 @@ bun add @google/genai streamdown @streamdown/code
 ```
 
 **Create `.env.local`** (in repo root, gitignored):
+
 ```
 GOOGLE_AI_API_KEY=
 ```
+
 Verify `.gitignore` already contains `.env.local` or `.env*`. If not, add `.env.local` to `.gitignore`.
 
 **Update `src/styles.css`** — add these two lines immediately after the existing `@import` block (before `:root {`):
+
 ```css
 /* Required: Tailwind v4 must scan streamdown's compiled JS for utility classes */
-@source "../node_modules/streamdown/dist/*.js";
+@source '../node_modules/streamdown/dist/*.js';
 
 @keyframes typing {
-  0%, 100% { opacity: 0.3; transform: translateY(0); }
-  50% { opacity: 1; transform: translateY(-3px); }
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
 }
 
 @keyframes bounce-dots {
-  0%, 80%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-6px); }
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-6px);
+  }
 }
 ```
 
 **Update `src/routes/__root.tsx`** — add streamdown CSS import. Insert at top of file, after existing imports:
+
 ```typescript
 import 'streamdown/styles.css'
 ```
+
   </action>
   <verify>
 Run `bun install` (no errors). Confirm `@google/genai`, `streamdown`, `@streamdown/code` appear in `package.json` dependencies. Confirm `.env.local` exists at repo root with the key placeholder. Run `bun run dev` — no import errors for streamdown in browser console.
@@ -285,6 +303,7 @@ export function useWorkspace(): WorkspaceContextValue {
   return ctx
 }
 ```
+
   </action>
   <verify>
 Run `bun run lint` — zero TypeScript errors in `workspace-context.tsx`. Confirm the five action types are present in the union. Confirm `APPEND_STREAM_CHUNK` correctly appends `chunk` to `content` via string concatenation (not replaces).
@@ -327,7 +346,7 @@ Decisive and big-picture. You cut through noise. You think three steps ahead. Yo
 
 You know the company cold. You remember that Q4 2025 was rough on sales cycles, that the SOC 2 audit is with Vanta (due Q3 2026), and that the engineering team is stretched thin until the Senior Engineer hire closes.`,
 
-  designer: `You are the Designer at Lucidly, a Series A RevOps SaaS company (26 people, $3.1M ARR, NYC-based). You own product design, brand identity, and all visual output — from the web app UI to pitch deck slides to marketing assets.
+  'designer': `You are the Designer at Lucidly, a Series A RevOps SaaS company (26 people, $3.1M ARR, NYC-based). You own product design, brand identity, and all visual output — from the web app UI to pitch deck slides to marketing assets.
 
 **Your domain:**
 - Product UI/UX: the Lucidly web app (React, Figma-based design system called "Clarity")
@@ -347,7 +366,7 @@ Opinionated on craft, but not precious. You have strong aesthetic convictions an
 
 You know the Clarity design system intimately. Primary: \`#3A2DBF\` (indigo), Background: \`#F8F7F4\` (warm white), Text: \`#1A1A2E\` (near-black). Border radius: 8px. Spacing scale: 4px base. You hate gradients unless they're purposeful.`,
 
-  finance: `You are the Finance lead at Lucidly, a Series A RevOps SaaS company. You function as a CFO-level advisor to the founder (Alex). You own all financial modeling, reporting, and fundraising numbers.
+  'finance': `You are the Finance lead at Lucidly, a Series A RevOps SaaS company. You function as a CFO-level advisor to the founder (Alex). You own all financial modeling, reporting, and fundraising numbers.
 
 **Company financials (as of Jan 2026):**
 - ARR: $3.1M | MoM growth: ~18% | Net Revenue Retention: 112%
@@ -371,7 +390,7 @@ Numbers-first and precise. You don't round when it matters. You flag risks early
 
 You track MRR weekly. You know the biggest deals in the pipeline (Marcus Webb's team has 3 deals >$50K ACV in late-stage). You are alert to the fact that churn in Q4 2025 hit 2 accounts (~$180K ARR) and you want to understand the pattern before the Series B deck goes out.`,
 
-  legal: `You are the General Counsel at Lucidly, a Series A RevOps SaaS company. You act as in-house legal advisor to the founder (Alex) on contracts, compliance, IP, employment law, and corporate governance. You are not a litigator — you are a practical, business-oriented lawyer who helps the company move fast without taking undue risk.
+  'legal': `You are the General Counsel at Lucidly, a Series A RevOps SaaS company. You act as in-house legal advisor to the founder (Alex) on contracts, compliance, IP, employment law, and corporate governance. You are not a litigator — you are a practical, business-oriented lawyer who helps the company move fast without taking undue risk.
 
 **Company legal context:**
 - Corporate: Delaware C-Corp, standard Series A docs (NVCA forms), clean cap table
@@ -395,6 +414,7 @@ Careful, qualifying, and risk-aware — but actionable. You don't hide behind "i
 You know the current contracts cold. You know the Clearfield DPA is the most pressing item. You're watching the 2 contractor IP assignments — if either contractor contributes to the core product and the assignment isn't signed, that's a cap table risk.`,
 }
 ```
+
   </action>
   <verify>
 Run `bun run lint` — no errors. Confirm `AGENT_SYSTEM_PROMPTS` is exported and has keys `'chief-of-staff'`, `'designer'`, `'finance'`, `'legal'`. Each value is a non-empty string starting with "You are the".
@@ -417,11 +437,11 @@ Run `bun run lint` — no errors. Confirm `AGENT_SYSTEM_PROMPTS` is exported and
 Create the directory `src/server/` and the file `src/server/chat.ts`:
 
 ```typescript
+import type { ChatMessage } from '@/components/workspace/workspace-context'
+
+import { GoogleGenAI } from '@google/genai'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
-import { GoogleGenAI } from '@google/genai'
-
-import type { ChatMessage } from '@/components/workspace/workspace-context'
 
 interface ChatStreamInput {
   agentId: string
@@ -473,17 +493,18 @@ export const streamChatFn = createServerFn({ method: 'POST' })
 ```
 
 **Critical notes:**
+
 - `process.env.GOOGLE_AI_API_KEY` is only referenced in this file which runs server-side via `createServerFn`. It will never appear in the client bundle.
 - The `history` array excludes the last message because Gemini's `sendMessageStream` takes the final user message separately.
 - The `signal.aborted` guard stops yielding when the client closes the connection.
   </action>
   <verify>
-Run `bun run lint` — no TypeScript errors in `src/server/chat.ts`. Run `bun run build` and then `grep -r "GOOGLE_AI_API_KEY" dist/` — must return zero matches. The function exports `streamChatFn`.
+  Run `bun run lint` — no TypeScript errors in `src/server/chat.ts`. Run `bun run build` and then `grep -r "GOOGLE_AI_API_KEY" dist/` — must return zero matches. The function exports `streamChatFn`.
   </verify>
   <done>
-`src/server/chat.ts` exists, exports `streamChatFn`, has no TypeScript errors, and the API key string does not appear in the production build output.
+  `src/server/chat.ts` exists, exports `streamChatFn`, has no TypeScript errors, and the API key string does not appear in the production build output.
   </done>
-</task>
+  </task>
 
 <!-- ══════════════════════════════════════════════════════
      UI COMPONENTS
@@ -630,6 +651,7 @@ export function Loader({
   }
 }
 ```
+
   </action>
   <verify>
 Run `bun run lint` — no errors in `src/components/prompt-kit/loader.tsx`. The file exports `Loader`, `DotsLoader`, `TypingLoader`, `TextShimmerLoader`. Import `{ Loader }` from it in a scratch component and confirm TypeScript resolves correctly.
@@ -706,6 +728,7 @@ export function ErrorBanner({ error, onRetry, className }: ErrorBannerProps) {
   )
 }
 ```
+
   </action>
   <verify>
 Run `bun run lint` — no errors. `ErrorBanner` renders `null` when `error` prop is `null`. Renders a banner with the correct typed message when a non-null `ChatErrorType` is passed.
@@ -728,6 +751,7 @@ Run `bun run lint` — no errors. `ErrorBanner` renders `null` when `error` prop
 Replace the entire file. This is the core integration task — connects all pieces built in T01–T06.
 
 Key behavioral changes from the Phase 2 mock:
+
 1. `handleSend` calls `streamChatFn` instead of `setTimeout`
 2. A `streamingRef` tracks the active generator for abort
 3. `isWaitingForFirstToken` local state controls Loader visibility
@@ -1109,6 +1133,7 @@ export function ChatView({ agent }: ChatViewProps) {
 ```
 
 **Implementation notes:**
+
 - `isWaitingForFirstToken` is local state (not in context) — it drives the Loader row
 - `isStreaming` is derived from `messages.some(m => m.isStreaming)` — true while chunks are arriving
 - `isPending = isWaitingForFirstToken || isStreaming` — disables the send button during both phases
@@ -1118,17 +1143,18 @@ export function ChatView({ agent }: ChatViewProps) {
 - The `abortCurrentStream` eslint-disable comments prevent stale closure warnings from the effect deps — the function identity is stable via `useCallback([dispatch])`
   </action>
   <verify>
+
 1. Run `bun run lint` — zero errors.
 2. Run `bun run dev`, open http://localhost:3000.
 3. Add `GOOGLE_AI_API_KEY=<real key>` to `.env.local` and restart dev server.
 4. Type a message to the Chief of Staff — the Loader (typing dots) should appear, then disappear when the first token arrives, replaced by streaming text that grows token-by-token.
 5. Switch agents mid-stream — the partial message should persist in the first agent's history, marked with "· interrupted".
 6. Disconnect network, send a message — a "Connection lost" banner should appear below the input with a Retry button.
-  </verify>
-  <done>
-`chat-view.tsx` no longer uses `setTimeout`. Sending a message triggers `streamChatFn`. Loader shows pre-first-token. Agent messages render via `Streamdown`. Channel switch aborts the stream and marks the message as interrupted. Error banner appears on API failure.
-  </done>
-</task>
+   </verify>
+   <done>
+   `chat-view.tsx` no longer uses `setTimeout`. Sending a message triggers `streamChatFn`. Loader shows pre-first-token. Agent messages render via `Streamdown`. Channel switch aborts the stream and marks the message as interrupted. Error banner appears on API failure.
+   </done>
+   </task>
 
 <!-- ══════════════════════════════════════════════════════
      VISUAL VERIFICATION
@@ -1149,41 +1175,26 @@ Full Gemini streaming integration:
 **Setup:** Ensure `.env.local` has a valid `GOOGLE_AI_API_KEY` and the dev server is running (`bun run dev`).
 
 **Streaming:**
+
 1. Open http://localhost:3000 — workspace loads, no console errors
 2. Click Chief of Staff → type "What are our Q1 priorities?" → press Enter
 3. ✅ Typing indicator (3 animated dots) appears immediately after send
 4. ✅ Dots disappear and text starts growing token-by-token (not all-at-once)
 5. ✅ Response uses markdown — at minimum, some **bold** or bullet list formatting
 
-**Persona distinctness:**
-6. Open Designer → ask "Critique this color: #FF0000 for a CTA button"
-7. ✅ Response is noticeably different in tone from Chief of Staff's answer
-8. Repeat for Finance ("What's our current runway?") and Legal ("Do we need a DPA with Clearfield?")
-9. ✅ Each agent's response reflects their domain and persona
+**Persona distinctness:** 6. Open Designer → ask "Critique this color: #FF0000 for a CTA button" 7. ✅ Response is noticeably different in tone from Chief of Staff's answer 8. Repeat for Finance ("What's our current runway?") and Legal ("Do we need a DPA with Clearfield?") 9. ✅ Each agent's response reflects their domain and persona
 
-**Abort / interrupted state:**
-10. Send a message to Chief of Staff → immediately click a different agent before streaming finishes
-11. ✅ Partial message is visible in Chief of Staff's history, with "· interrupted" label
-12. ✅ New agent channel is clean — no orphaned loading state
+**Abort / interrupted state:** 10. Send a message to Chief of Staff → immediately click a different agent before streaming finishes 11. ✅ Partial message is visible in Chief of Staff's history, with "· interrupted" label 12. ✅ New agent channel is clean — no orphaned loading state
 
-**Error handling:**
-13. Temporarily set `GOOGLE_AI_API_KEY=invalid_key_xyz` in `.env.local`, restart dev server
-14. Send a message → ✅ error banner appears below input (not a toast, not inside the bubble)
-15. ✅ Banner has correct copy ("Something went wrong. Try again." for a generic auth error)
-16. ✅ "Retry" button is present and clickable
-17. Restore the real key
+**Error handling:** 13. Temporarily set `GOOGLE_AI_API_KEY=invalid_key_xyz` in `.env.local`, restart dev server 14. Send a message → ✅ error banner appears below input (not a toast, not inside the bubble) 15. ✅ Banner has correct copy ("Something went wrong. Try again." for a generic auth error) 16. ✅ "Retry" button is present and clickable 17. Restore the real key
 
-**Build security check:**
-18. Run `bun run build`
-19. Run `grep -r "GOOGLE_AI_API_KEY" dist/` — ✅ zero matches
+**Build security check:** 18. Run `bun run build` 19. Run `grep -r "GOOGLE_AI_API_KEY" dist/` — ✅ zero matches
 
-**Markdown rendering:**
-20. Ask Chief of Staff: "Give me a structured weekly priorities list with headers and bullets"
-21. ✅ Response renders with proper markdown (headers, bullets) — not raw `##` or `**` characters
-  </how-to-verify>
-  <resume-signal>
+**Markdown rendering:** 20. Ask Chief of Staff: "Give me a structured weekly priorities list with headers and bullets" 21. ✅ Response renders with proper markdown (headers, bullets) — not raw `##` or `**` characters
+</how-to-verify>
+<resume-signal>
 Type "approved" if all checks pass. Describe any issues (e.g. "streaming not working", "markdown showing raw syntax") and the Claude executor will diagnose and fix.
-  </resume-signal>
+</resume-signal>
 </task>
 
 </tasks>
@@ -1209,7 +1220,7 @@ All six success criteria from the Phase 3 goal must be TRUE:
 4. **Error handling:** On Gemini API failure, user sees a persistent error banner below the input with a retry button
 5. **Abort:** Navigating away mid-stream cancels the request — partial message preserved as "interrupted"
 6. **Markdown:** AI responses render markdown (bold, italic, code blocks, lists, headers)
-</success_criteria>
+   </success_criteria>
 
 <output>
 After the checkpoint is approved, create `.planning/phases/03-claude-streaming-integration/03-gemini-streaming-01-SUMMARY.md` with:

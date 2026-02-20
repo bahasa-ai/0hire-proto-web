@@ -12,9 +12,9 @@ export type ChatErrorType =
 
 const ERROR_MESSAGES: Record<NonNullable<ChatErrorType>, string> = {
   'rate-limited': 'Rate limited — wait a moment before trying again.',
-  network: 'Connection lost — check your network and retry.',
-  timeout: 'Response timed out — try again.',
-  generic: 'Something went wrong. Try again.',
+  'network': 'Connection lost — check your network and retry.',
+  'timeout': 'Response timed out — try again.',
+  'generic': 'Something went wrong. Try again.',
 }
 
 interface ErrorBannerProps {

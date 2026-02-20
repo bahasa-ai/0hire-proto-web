@@ -7,6 +7,7 @@
 ---
 
 <user_constraints>
+
 ## User Constraints (from CONTEXT.md)
 
 ### Locked Decisions
@@ -14,17 +15,20 @@
 **API Provider:** Google Gemini (NOT Anthropic). Environment variable: `GOOGLE_AI_API_KEY`.
 
 **Streaming UX:**
+
 - Show prompt-kit `Loader` from send until first token; fade out on first token; message bubble fades in
 - Use `streamdown` (vercel/streamdown) for markdown rendering during streaming
 - Smart auto-scroll: follow bottom unless user scrolled up; resume on scroll-back-to-bottom
 - On channel switch or unmount: abort the stream, preserve partial message as "interrupted"
 
 **Error handling:**
+
 - Persistent banner below input bar (not toast, not inside bubble)
 - Error types: rate limited, network/offline, timeout (>10s), generic
 - Retry re-sends full conversation history
 
 **Conversation context:**
+
 - Full history sent per turn
 - Agent name prefixed in assistant content: `[Chief of Staff]: Here's the plan...`
 - Each agent's thread is fully isolated
@@ -34,8 +38,9 @@
 Professional but warm. Realistic Series A tech startup (~25 employees). Each agent knows their domain context. Formatting: use markdown. Concise, structured.
 
 ### Deferred Ideas (OUT OF SCOPE)
+
 - Thesys / Generative UI (C1 API) — generative UI components from agent responses
-</user_constraints>
+  </user_constraints>
 
 ---
 
@@ -151,10 +156,11 @@ The async generator approach is cleaner than ReadableStream for AI streaming.
 
 ```typescript
 // src/server/chat.ts
+import type { ChatMessage } from '@/components/workspace/workspace-context'
+
+import { GoogleGenAI } from '@google/genai'
 import { createServerFn } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
-import { GoogleGenAI } from '@google/genai'
-import type { ChatMessage } from '@/components/workspace/workspace-context'
 
 interface ChatStreamInput {
   agentId: string
@@ -167,7 +173,7 @@ export const streamChatFn = createServerFn({ method: 'POST' })
   .handler(async function* ({ data }) {
     const { agentId, messages, systemPrompt } = data
     const request = getRequest()
-    const signal = request.signal  // propagate abort from client disconnect
+    const signal = request.signal // propagate abort from client disconnect
 
     const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_AI_API_KEY })
 
@@ -176,7 +182,7 @@ export const streamChatFn = createServerFn({ method: 'POST' })
     const lastMessage = messages[messages.length - 1]
 
     const history = historyMessages.map(msg => ({
-      role: msg.role === 'user' ? 'user' : 'model' as const,
+      role: msg.role === 'user' ? 'user' : ('model' as const),
       parts: [{ text: msg.content }],
     }))
 
@@ -190,7 +196,9 @@ export const streamChatFn = createServerFn({ method: 'POST' })
       history,
     })
 
-    const stream = await chat.sendMessageStream({ message: lastMessage.content })
+    const stream = await chat.sendMessageStream({
+      message: lastMessage.content,
+    })
 
     for await (const chunk of stream) {
       if (signal.aborted) break
@@ -212,7 +220,9 @@ const generatorRef = useRef<AsyncGenerator<string> | null>(null)
 const handleSend = async (text: string) => {
   // ... dispatch user message, set streaming state ...
 
-  const generator = await streamChatFn({ data: { agentId, messages, systemPrompt } })
+  const generator = await streamChatFn({
+    data: { agentId, messages, systemPrompt },
+  })
   generatorRef.current = generator
 
   let accumulated = ''
@@ -260,6 +270,7 @@ useEffect(() => {
 ```
 
 **Note:** TanStack Start's `createServerFn` does not expose a public API to pass an `AbortSignal` through the call. However:
+
 1. When the client closes the connection (via `return()` on the generator or component unmount), the server receives a request abort signal via `request.signal` (retrieved with `getRequest()`)
 2. On the client, breaking out of the `for await` loop and calling `.return()` on the generator effectively closes the stream
 
@@ -314,7 +325,7 @@ Add to `src/styles.css` (after the existing `@import` lines):
 
 ```css
 /* Required: allows Tailwind to detect streamdown utility classes */
-@source "../node_modules/streamdown/dist/*.js";
+@source '../node_modules/streamdown/dist/*.js';
 ```
 
 Also import the styles in the component or globally:
@@ -352,16 +363,16 @@ import 'streamdown/styles.css'
 
 ### Key Props
 
-| Prop | Type | Default | Purpose |
-|------|------|---------|---------|
-| `children` | `string` | required | The markdown text (partial or complete) |
-| `isAnimating` | `boolean` | `false` | Set `true` while streaming — enables streaming-optimized rendering |
-| `animated` | `boolean` | `false` | Fade-in animation for each block as it appears |
-| `mode` | `'streaming' \| 'static'` | `'streaming'` | Use `'static'` for completed messages to skip streaming logic |
-| `plugins` | `object` | `{}` | Plugin map — pass `{ code }` for syntax highlighting |
-| `caret` | `'block' \| 'circle'` | none | Shows cursor at end during streaming |
-| `className` | `string` | — | Additional CSS classes |
-| `shikiTheme` | `[string, string]` | — | `[lightTheme, darkTheme]` for code blocks |
+| Prop          | Type                      | Default       | Purpose                                                            |
+| ------------- | ------------------------- | ------------- | ------------------------------------------------------------------ |
+| `children`    | `string`                  | required      | The markdown text (partial or complete)                            |
+| `isAnimating` | `boolean`                 | `false`       | Set `true` while streaming — enables streaming-optimized rendering |
+| `animated`    | `boolean`                 | `false`       | Fade-in animation for each block as it appears                     |
+| `mode`        | `'streaming' \| 'static'` | `'streaming'` | Use `'static'` for completed messages to skip streaming logic      |
+| `plugins`     | `object`                  | `{}`          | Plugin map — pass `{ code }` for syntax highlighting               |
+| `caret`       | `'block' \| 'circle'`     | none          | Shows cursor at end during streaming                               |
+| `className`   | `string`                  | —             | Additional CSS classes                                             |
+| `shikiTheme`  | `[string, string]`        | —             | `[lightTheme, darkTheme]` for code blocks                          |
 
 ### Syntax Highlighting with @streamdown/code
 
@@ -383,6 +394,7 @@ const customCode = createCodePlugin({
 ### How It Handles Partial Markdown
 
 `streamdown` uses `remend` internally to auto-complete incomplete markdown syntax:
+
 - Unclosed ` ``` ` code fences → auto-closed for rendering, re-opened on next token
 - Unclosed `**bold**` → auto-completed
 - No flickering or layout jumps on partial syntax
@@ -403,6 +415,7 @@ Completed blocks (paragraphs, code blocks) are memoized and do not re-render whe
 ### Status: NOT YET INSTALLED
 
 The project currently has these prompt-kit components:
+
 - `src/components/prompt-kit/chat-container.tsx` ✓
 - `src/components/prompt-kit/message.tsx` ✓
 - `src/components/prompt-kit/prompt-input.tsx` ✓
@@ -417,8 +430,9 @@ https://github.com/ibelick/prompt-kit/blob/main/components/prompt-kit/loader.tsx
 ### Full Source to Add at `src/components/prompt-kit/loader.tsx`
 
 ```tsx
-import { cn } from '@/lib/utils'
 import React from 'react'
+
+import { cn } from '@/lib/utils'
 
 export interface LoaderProps {
   variant?:
@@ -531,7 +545,12 @@ export function TextShimmerLoader({
   )
 }
 
-function Loader({ variant = 'circular', size = 'md', text, className }: LoaderProps) {
+function Loader({
+  variant = 'circular',
+  size = 'md',
+  text,
+  className,
+}: LoaderProps) {
   switch (variant) {
     case 'dots':
       return <DotsLoader size={size} className={className} />
@@ -561,8 +580,15 @@ The `typing` variant uses `animate-[typing_1s_infinite]`. This keyframe must be 
 
 ```css
 @keyframes typing {
-  0%, 100% { opacity: 0.3; transform: translateY(0); }
-  50% { opacity: 1; transform: translateY(-3px); }
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
 }
 ```
 
@@ -571,14 +597,18 @@ The `tw-animate-css` package (already in `package.json`) may provide some of the
 ### Usage in ChatView
 
 ```tsx
-{isWaitingForFirstToken && (
-  <div className="flex justify-start">
-    <div className={cn('border-l-2 pl-3', accentBorder)}>
-      <p className="text-muted-foreground mb-1 text-xs font-medium">{agent.name}</p>
-      <Loader variant="typing" size="sm" />
+{
+  isWaitingForFirstToken && (
+    <div className="flex justify-start">
+      <div className={cn('border-l-2 pl-3', accentBorder)}>
+        <p className="text-muted-foreground mb-1 text-xs font-medium">
+          {agent.name}
+        </p>
+        <Loader variant="typing" size="sm" />
+      </div>
     </div>
-  </div>
-)}
+  )
+}
 ```
 
 ---
@@ -644,15 +674,16 @@ This component must be rendered **inside** the `StickToBottom` component (i.e., 
 
 ```typescript
 const {
-  isAtBottom,        // boolean — user is at (or near) bottom
-  isNearBottom,      // boolean — within ~100px of bottom
-  escapedFromLock,   // boolean — user has scrolled up
-  scrollToBottom,    // (options?) => Promise<boolean>
-  contentRef,        // ref to content element
+  isAtBottom, // boolean — user is at (or near) bottom
+  isNearBottom, // boolean — within ~100px of bottom
+  escapedFromLock, // boolean — user has scrolled up
+  scrollToBottom, // (options?) => Promise<boolean>
+  contentRef, // ref to content element
 } = useStickToBottomContext()
 ```
 
 `scrollToBottom` options:
+
 - `animation: 'smooth' | 'instant' | { damping, stiffness, mass }` (spring physics)
 - `ignoreEscapes: boolean` — scroll even if user scrolled up (useful for forced scroll-to-bottom on send)
 
@@ -733,8 +764,8 @@ export interface ChatMessage {
   content: string
   agentId: string
   timestamp: number
-  isStreaming?: boolean      // true while tokens are arriving
-  interrupted?: boolean      // true if stream was cut mid-way
+  isStreaming?: boolean // true while tokens are arriving
+  interrupted?: boolean // true if stream was cut mid-way
 }
 ```
 
@@ -744,7 +775,12 @@ New `WorkspaceAction` types needed:
 type WorkspaceAction =
   | { type: 'APPEND_MESSAGE'; agentId: string; message: ChatMessage }
   | { type: 'START_STREAMING'; agentId: string; message: ChatMessage }
-  | { type: 'APPEND_STREAM_CHUNK'; agentId: string; messageId: string; chunk: string }
+  | {
+      type: 'APPEND_STREAM_CHUNK'
+      agentId: string
+      messageId: string
+      chunk: string
+    }
   | { type: 'FINISH_STREAMING'; agentId: string; messageId: string }
   | { type: 'INTERRUPT_STREAMING'; agentId: string; messageId: string }
 ```
@@ -1026,6 +1062,7 @@ Streaming state (which message is actively streaming) stays in `ChatView` compon
 ## Sources
 
 ### Primary (HIGH confidence)
+
 - Context7 `/googleapis/js-genai` — streaming, chat API, history format, system instructions
 - Context7 `/vercel/streamdown` — component API, props, code plugin, streaming behavior
 - Context7 `/stackblitz-labs/use-stick-to-bottom` — scroll context API
@@ -1033,9 +1070,11 @@ Streaming state (which message is actively streaming) stays in `ChatView` compon
 - npm registry: streamdown v2.2.0 (verified current version Feb 2026)
 
 ### Secondary (MEDIUM confidence)
+
 - GitHub: https://github.com/ibelick/prompt-kit/blob/main/components/prompt-kit/loader.tsx — Loader source (fetched directly)
 
 ### Tertiary (LOW confidence)
+
 - Inference about `getRequest().signal` abort propagation — based on general HTTP streaming behavior, not documented explicitly in TanStack Start for this exact pattern
 
 ---
@@ -1043,6 +1082,7 @@ Streaming state (which message is actively streaming) stays in `ChatView` compon
 ## Metadata
 
 **Confidence breakdown:**
+
 - Gemini SDK: HIGH — Context7 `/googleapis/js-genai` has 1117 snippets, High reputation
 - TanStack Start streaming: HIGH — official docs fetched directly
 - streamdown: HIGH — official npm page + Context7 verified

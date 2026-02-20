@@ -1,168 +1,307 @@
-# Interface Design System — Zero Hire
+# 0hire Interface Design System
 
-_Established: 2026-02-19_
+**Product:** Multi-agent AI hiring/ops workspace — four specialist agents (Chief of Staff, Designer, Finance, Legal) in a Slack-like single-page shell.
 
----
-
-## Product World
-
-**Domain:** Delegation — a business owner handing work to a trusted AI team. Not a chat app. Not a consumer product. Closer to an executive office management tool.
-
-**User:** Non-technical business owner (Alex Rivera archetype). Between meetings. Delegating quickly. Trusting their team to handle it.
-
-**Core verb:** Delegate. Everything in the interface should make delegation feel effortless and authoritative.
+**User:** A founder or solo operator, early-stage startup. Switching context constantly. Opens 0hire to delegate, check status, or fire off a task. Moves fast. Not browsing — operating.
 
 ---
 
 ## Direction & Feel
 
-**Stated intent:** Quiet authority.
+**Operations room.** Dark, focused, professional. Not a consumer chat app — a tool where serious work happens. Warm enough to feel human (this is a team you trust), precise enough to communicate competence.
 
-Not cold like a terminal. Not warm like a consumer app. The specific quality: purposeful calm. Like communicating with a capable team you trust. Structure whispers — nothing demands attention.
+Reference feeling: a startup war room at 10pm. Walnut desk, brass lamp, printed briefs, dark walls. Every element earns its place.
 
-**Not:** ChatGPT, iMessage, Slack. Those are the anti-patterns.
-
----
-
-## Signature Element
-
-**Agent messages render as memos, not bubbles.**
-
-No background fill. No rounded card. A hairline `border-l-2` in the agent's accent color (`bg-chart-X` → `border-chart-X`), with `pl-3` left padding. Agent name appears above in `text-xs font-medium text-muted-foreground`. The text is `text-foreground text-sm leading-relaxed` — just type.
-
-This signals: "considered briefing from your team," not "AI chatbot response." It is the defining visual signature of this product and must be preserved across all future message rendering work (including streaming in Phase 3).
-
----
-
-## Depth Strategy
-
-**Borders only.** No box shadows anywhere.
-
-- Sidebar/main boundary: `border-r border-sidebar-border`
-- Channel header bottom: `border-b border-border`
-- Tab strip bottom: `border-b border-border` (also serves as tab underline anchor)
-- Composer top: `border-t border-border`
-- Popovers/dropdowns: may use a single-level subtle shadow if needed
-
-Surfaces use barely-different background values — the existing OKLCH tokens handle this. `bg-sidebar` vs `bg-background` are intentionally close. Do not introduce card borders inside the main panel content area.
-
----
-
-## Spacing Base Unit
-
-Tailwind 4-unit scale (`4px` base). Consistent multiples throughout:
-
-- Sidebar padding: `px-3 py-4` (header), `px-2 py-2` (nav items)
-- Channel header: `px-6 h-14`
-- Tab strip: `px-6 py-0` (tabs flush-bottom)
-- Message area: `px-6 py-6`, message gap `space-y-5`
-- Composer: `px-4 py-3`
+**Not:** Generic SaaS dark theme. Not Slack. Not a terminal. Not cozy productivity.
 
 ---
 
 ## Color System
 
-All colors are semantic tokens from `src/styles.css`. No hardcoded hex/oklch/rgb in components.
+### Base Palette (OKLCH)
 
-**Agent identity:** `bg-chart-2` through `bg-chart-5` — one per agent. These also appear as `border-chart-X` for the memo accent border, and `text-primary-foreground` text on avatar circles.
+```css
+/* Surfaces — four whisper-quiet elevation steps */
+--color-base: oklch(0.11 0.008 55); /* sidebar bg — darkest */
+--color-surface: oklch(0.14 0.008 55); /* content pane bg */
+--color-surface-2: oklch(0.17 0.007 55); /* raised cards, input bg */
+--color-surface-3: oklch(0.21 0.006 55); /* hover states, popovers */
 
-**Surfaces:**
+/* Borders — barely visible structure */
+--color-border: oklch(0.22 0.005 55); /* default dividers */
+--color-border-2: oklch(0.27 0.005 55); /* stronger separation */
 
-- Page base: `bg-background`
-- Sidebar: `bg-sidebar`
-- Active sidebar item: `bg-sidebar-primary text-sidebar-primary-foreground`
-- Hover sidebar item: `hover:bg-sidebar-accent`
+/* Text hierarchy */
+--color-text: oklch(0.92 0.008 75); /* primary — warm off-white */
+--color-text-2: oklch(0.65 0.007 65); /* secondary — mid warm grey */
+--color-text-3: oklch(0.42 0.006 65); /* tertiary — muted labels */
 
-**Text hierarchy:**
+/* Accent — single interaction color */
+--color-accent: oklch(0.72 0.12 75); /* brass/amber — hover, focus, active */
+--color-accent-dim: oklch(0.72 0.12 75 / 0.15); /* accent glow on surfaces */
+```
 
-- Primary content: `text-foreground`
-- Secondary / labels: `text-muted-foreground`
-- Active inherited foreground sublabel: `opacity-60` (not `text-muted-foreground`, which breaks on colored backgrounds)
+### Agent Identity Colors (muted, professional)
+
+Each agent has ONE identity color used only on: avatar initial background, active channel left-border hairline, channel header accent.
+
+```css
+--agent-chief: oklch(0.6 0.09 75); /* brass — authority, leadership */
+--agent-designer: oklch(0.58 0.1 20); /* dusty coral — creative energy */
+--agent-finance: oklch(0.52 0.08 220); /* deep teal — precision, numbers */
+--agent-legal: oklch(0.52 0.07 145); /* stamp green — approval, compliance */
+```
+
+Agent colors are **never used as background fills** on large surfaces. Only as:
+
+- 2px left border on the active sidebar item
+- Avatar initial background (at ~15% opacity with the color as text)
+- Hairline accent at top of channel header
 
 ---
 
-## Key Component Patterns
+## Depth Strategy
 
-### Agent Message (Memo Style)
+**Borders-only.** No shadows.
 
-```tsx
-<div className={cn('border-l-2 pl-3', accentBorder)}>
-  <p className="text-muted-foreground mb-1 text-xs font-medium">{agent.name}</p>
-  <MessageContent className="text-foreground text-sm leading-relaxed">
-    {content}
-  </MessageContent>
-</div>
+This is a dense work tool. Shadows add softness and lift — wrong for this context. Borders communicate structure without depth theater.
+
+- All card/panel separation via `--color-border`
+- Elevated surfaces (dropdowns, popovers) use `--color-surface-3` background + `--color-border-2` border
+- No `box-shadow` anywhere except focus rings
+
+**Focus ring:** `outline: 2px solid var(--color-accent)` at `2px offset`. Not a glow — a precise indicator.
+
+---
+
+## Spacing Scale
+
+Base unit: **4px**. All spacing is multiples of 4.
+
+```
+4px   — tight inline gaps (icon + label)
+8px   — component internal padding (tight)
+12px  — component internal padding (default)
+16px  — section padding, card padding
+20px  — larger card padding
+24px  — section gaps
+32px  — major layout gaps
+48px  — page-level breathing room
 ```
 
-`accentBorder` = `agent.accentColor.replace('bg-', 'border-')`
+Sidebar internal padding: `12px` horizontal, `8px` vertical per item.
+Content pane padding: `24px` horizontal, `20px` vertical.
 
-### User Message (Compact Pill)
+---
 
-```tsx
-<Message className="flex justify-end">
-  <MessageContent className="bg-primary text-primary-foreground max-w-[65%] rounded-2xl px-4 py-2 text-sm leading-relaxed">
-    {content}
-  </MessageContent>
-</Message>
+## Typography
+
+Font: **Inter Variable** (`--font-sans`) — already in project.
+
+```
+/* Type scale */
+--text-xs:   0.6875rem / 1.4  (10-11px) — timestamps, meta
+--text-sm:   0.8125rem / 1.5  (13px)    — labels, secondary content
+--text-base: 0.9375rem / 1.6  (15px)    — body, message content
+--text-lg:   1.0625rem / 1.4  (17px)    — section headers
+--text-xl:   1.25rem   / 1.2  (20px)    — page/channel titles
 ```
 
-### Thinking Indicator (Memo-Consistent)
+Weight system:
 
-```tsx
-<div className={cn('border-l-2 pl-3', accentBorder)}>
-  <p className="text-muted-foreground mb-1 text-xs font-medium">{agent.name}</p>
-  <span className="text-muted-foreground animate-pulse text-sm">…</span>
-</div>
+- `400` — body text, message content
+- `500` — labels, nav items, secondary headings
+- `600` — primary headings, agent names
+- `700` — only for numeric emphasis in data
+
+Tracking:
+
+- Body/labels: `letter-spacing: 0` (Inter is well-spaced at normal)
+- ALL-CAPS labels: `letter-spacing: 0.06em` + `font-size: --text-xs` + `font-weight: 500`
+- No decorative tracking on regular text
+
+---
+
+## Border Radius
+
+Sharp-leaning. This is a work tool, not a consumer app.
+
+```
+--radius-sm:  2px   — inputs, tags, tiny elements
+--radius-md:  4px   — buttons, cards
+--radius-lg:  6px   — modals, larger panels
+--radius-full: 9999px — avatars only
 ```
 
-Same structure as a real message — transition from thinking → replied is visually continuous.
+**Never** use `rounded-xl`, `rounded-2xl`, or `rounded-3xl`.
 
-### Tab Toggle (Underline Style)
+---
 
-```tsx
-<button className={cn(
-  '-mb-px border-b-2 px-1 pb-2.5 pt-2 text-sm capitalize transition-colors',
-  active
-    ? 'border-primary text-foreground font-medium'
-    : 'border-transparent text-muted-foreground hover:text-foreground',
-)}>
+## Message Style
+
+**No bubbles.** Document-style.
+
+```
+User messages:
+  - Right-aligned text
+  - No bubble, no background
+  - Subtle right border: 2px solid --color-accent-dim
+  - Text color: --color-text
+  - Timestamp: right-aligned, --color-text-3, --text-xs
+
+Assistant messages:
+  - Full-width, left-aligned
+  - No bubble, no background
+  - Avatar initial (agent color) floats left, 28px, rounded-full
+  - Content area fills remaining width
+  - Markdown rendered via prompt-kit Markdown component
+  - Separator: 1px --color-border between messages (not above every message — only when role changes)
 ```
 
-Tabs sit in a `border-b border-border` strip. Active tab's `border-b-2 border-primary` overlaps the strip border with `-mb-px`. No background fill.
+Message grouping: consecutive messages from the same role get `4px` gap; role-change gets `16px` gap + separator line.
 
-### Empty State (Text-Forward)
+---
 
-Centered agent hero (large avatar + name + description), then a vertical list of text suggestion buttons:
+## Sidebar (WorkspaceSidebar)
 
-```tsx
-<button className="text-foreground/70 hover:text-foreground hover:bg-accent w-full justify-start rounded-md px-3 py-2 text-sm transition-colors">
+```
+Width: 220px, fixed
+Background: --color-base
+Border-right: 1px --color-border
+
+Header: Logo + product name, 48px height, 16px horizontal padding
+  Logo: small wordmark or icon — brass color
+
+Agent channel item (AgentChannelItem):
+  Height: 44px
+  Padding: 12px horizontal, 0 vertical (centered)
+  Layout: [2px active border] [28px avatar] [8px gap] [name + role stack]
+
+  Avatar: round, 28px
+    Background: agent-color at 12% opacity
+    Text: agent-color, 11px, weight 600, initials
+
+  Name: --text-sm, weight 500, --color-text
+  Role: --text-xs, --color-text-3
+
+  Default state: transparent bg
+  Hover: --color-surface-2 bg
+  Active: --color-surface bg + 2px left border in agent-color + name weight 600
+
+  Unread indicator: 6px dot, --color-accent, absolutely positioned top-right of avatar
 ```
 
-No chip grid. No card borders. The suggestions read as a quiet list, not a marketing widget.
+---
+
+## Channel Header (ChannelHeader)
+
+```
+Height: 56px
+Background: --color-surface
+Border-bottom: 1px --color-border
+Padding: 16px horizontal
+
+Left: [40px avatar] [12px gap] [name + role stack]
+  Avatar: 40px round, same style as sidebar but larger
+  Name: --text-lg, weight 600
+  Role: --text-sm, --color-text-2
+
+Agent identity accent: 3px horizontal line at very bottom of header, in agent-color, full width
+
+Right: status indicator + action buttons (icon only, 32px)
+```
+
+---
+
+## Chat Input (ChatInput / PromptInput)
+
+```
+Background: --color-surface-2
+Border: 1px --color-border-2
+Border-radius: --radius-sm (2px — intentionally sharp)
+Padding: 12px 16px
+Min-height: 44px, auto-grows
+
+Placeholder: --color-text-3
+Text: --color-text, --text-base
+
+Focus: border-color → --color-accent (no glow, just border change)
+
+Submit button: icon-only, 28px, brass accent on active
+  Default: --color-text-3
+  Hover: --color-accent
+  Active (has content): --color-accent
+```
+
+---
+
+## Task Board (TaskBoard)
+
+```
+Panel width: 260px, fixed right
+Background: --color-base (matches sidebar — unified dark frame)
+Border-left: 1px --color-border
+
+Header: "Tasks" + agent name, 48px, 16px padding, --text-sm weight 600
+
+Task item:
+  Height: auto, min 36px
+  Padding: 8px 12px
+  Border-bottom: 1px --color-border
+
+  Status indicator: 16px circle outline left of text
+    todo: --color-border-2 outline
+    in-progress: --color-accent outline + --color-accent-dim fill
+    done: --agent-{id} outline + solid fill, checkmark
+
+  Text: --text-sm, --color-text
+  Done text: line-through, --color-text-3
+
+Empty state: centered, --color-text-3, --text-sm, italic
+  "No tasks yet"
+```
 
 ---
 
 ## Animation
 
-- Micro-interactions: `transition-colors` at Tailwind default (~150ms)
-- Thinking indicator: `animate-pulse` on a single `…` character
-- No spring/bounce effects. No layout animations. Calm.
+```
+Duration: 150ms for micro-interactions (hover, focus, active states)
+Duration: 200ms for panels expanding/collapsing
+Easing: cubic-bezier(0.2, 0, 0, 1)  — fast in, smooth out
+No spring/bounce. No decorative animation.
+```
 
 ---
 
-## Defaults Permanently Rejected
+## States Checklist
 
-| Default                                                      | Replacement                           | Reason                                             |
-| ------------------------------------------------------------ | ------------------------------------- | -------------------------------------------------- |
-| Both message sides as rounded filled bubbles                 | User = pill, Agent = memo border      | Agent responses are briefings, not chat            |
-| `bg-accent` filled active tab                                | Underline `border-b-2 border-primary` | Typographic, not widget-y                          |
-| Flex-wrap chip grid for empty state suggestions              | Vertical text list                    | Quieter, matches the editorial feel                |
-| Box shadows for elevation                                    | Borders only                          | Consistent with the clean/technical depth strategy |
-| `text-muted-foreground` for sublabels on colored backgrounds | `opacity-60`                          | Inherits correct foreground instead of fighting it |
+Every interactive element must have:
+
+- [ ] Default
+- [ ] Hover (background shift to `--color-surface-3` or border color change)
+- [ ] Active/pressed (`scale-[0.98]` on buttons)
+- [ ] Focus (brass `outline`, never removed)
+- [ ] Disabled (`opacity-40`, `cursor-not-allowed`, no hover effect)
+
+Data states:
+
+- [ ] Loading (Loader component from prompt-kit)
+- [ ] Empty (centered message, --color-text-3)
+- [ ] Error (--color-destructive text, brief description)
+- [ ] Streaming (Loader indicator, content appears inline)
 
 ---
 
-## Phase Notes
+## What To Avoid
 
-- **Phase 3 (streaming):** The memo-style agent message MUST be preserved. Streaming appends tokens into the same `border-l-2 pl-3` structure. Do not introduce a different style for streamed vs. mock responses.
-- **Phase 4 (task board):** Task cards should follow the borders-only depth strategy. No dramatic card shadows.
+- Box shadows (borders-only strategy)
+- `rounded-xl` or larger on non-avatar elements
+- Hardcoded hex/rgb values — always reference CSS custom properties
+- Multiple accent colors for interaction states
+- Bubble-style chat messages
+- White/light backgrounds in the content pane
+- Agent colors as large surface fills
+- Pure black (`oklch(0 0 0)`) — always use warm dark
+- Decorative gradients
+- Bouncy/spring animations

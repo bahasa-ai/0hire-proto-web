@@ -34,7 +34,7 @@ const MessageAvatar = ({
   className,
 }: MessageAvatarProps) => {
   return (
-    <Avatar className={cn('size-8 shrink-0', className)}>
+    <Avatar className={cn('h-8 w-8 shrink-0', className)}>
       <AvatarImage src={src} alt={alt} />
       {fallback && (
         <AvatarFallback delayMs={delayMs}>{fallback}</AvatarFallback>
@@ -55,7 +55,10 @@ const MessageContent = ({
 }: MessageContentProps) => {
   return (
     <div
-      className={cn('bg-secondary text-foreground rounded-lg p-2', className)}
+      className={cn(
+        'text-foreground bg-secondary rounded-lg p-2 break-words whitespace-normal',
+        className,
+      )}
       {...props}
     >
       {children}
@@ -73,7 +76,10 @@ const MessageActions = ({
   className,
   ...props
 }: MessageActionsProps) => (
-  <div className={cn('flex items-center gap-1', className)} {...props}>
+  <div
+    className={cn('text-muted-foreground flex items-center gap-2', className)}
+    {...props}
+  >
     {children}
   </div>
 )
@@ -83,7 +89,7 @@ export type MessageActionProps = {
   tooltip: React.ReactNode
   children: React.ReactNode
   side?: 'top' | 'bottom' | 'left' | 'right'
-} & React.ComponentProps<typeof TooltipTrigger>
+} & React.ComponentProps<typeof Tooltip>
 
 const MessageAction = ({
   tooltip,
@@ -94,11 +100,11 @@ const MessageAction = ({
 }: MessageActionProps) => {
   return (
     <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger className={className} {...props}>
-          {children}
-        </TooltipTrigger>
-        <TooltipContent side={side}>{tooltip}</TooltipContent>
+      <Tooltip {...props}>
+        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipContent side={side} className={className}>
+          {tooltip}
+        </TooltipContent>
       </Tooltip>
     </TooltipProvider>
   )

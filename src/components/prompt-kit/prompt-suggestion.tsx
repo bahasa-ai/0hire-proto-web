@@ -1,6 +1,7 @@
+import type { buttonVariants } from '@/components/ui/button'
 import type { VariantProps } from 'class-variance-authority'
 
-import { buttonVariants } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 export type PromptSuggestionProps = {
@@ -24,29 +25,31 @@ function PromptSuggestion({
 
   if (!isHighlightMode) {
     return (
-      <button
-        className={cn(
-          buttonVariants({ variant: variant ?? 'outline', size }),
-          className,
-        )}
+      <Button
+        variant={variant || 'outline'}
+        size={size || 'lg'}
+        className={cn('rounded-full', className)}
         {...props}
       >
         {children}
-      </button>
+      </Button>
     )
   }
 
   if (!content) {
     return (
-      <button
+      <Button
+        variant={variant || 'ghost'}
+        size={size || 'sm'}
         className={cn(
-          buttonVariants({ variant: variant ?? 'outline', size }),
+          'w-full cursor-pointer justify-start rounded-xl py-2',
+          'hover:bg-accent',
           className,
         )}
         {...props}
       >
         {children}
-      </button>
+      </Button>
     )
   }
 
@@ -56,9 +59,12 @@ function PromptSuggestion({
   const shouldHighlight = contentLower.includes(highlightLower)
 
   return (
-    <button
+    <Button
+      variant={variant || 'ghost'}
+      size={size || 'sm'}
       className={cn(
-        buttonVariants({ variant: variant ?? 'outline', size }),
+        'w-full cursor-pointer justify-start gap-0 rounded-xl py-2',
+        'hover:bg-accent',
         className,
       )}
       {...props}
@@ -66,7 +72,12 @@ function PromptSuggestion({
       {shouldHighlight ? (
         (() => {
           const index = contentLower.indexOf(highlightLower)
-          if (index === -1) return <span className="opacity-50">{content}</span>
+          if (index === -1)
+            return (
+              <span className="text-muted-foreground whitespace-pre-wrap">
+                {content}
+              </span>
+            )
 
           const actualHighlightedText = content.substring(
             index,
@@ -77,16 +88,28 @@ function PromptSuggestion({
 
           return (
             <>
-              {before && <span className="opacity-50">{before}</span>}
-              <span className="opacity-100">{actualHighlightedText}</span>
-              {after && <span className="opacity-50">{after}</span>}
+              {before && (
+                <span className="text-muted-foreground whitespace-pre-wrap">
+                  {before}
+                </span>
+              )}
+              <span className="text-primary font-medium whitespace-pre-wrap">
+                {actualHighlightedText}
+              </span>
+              {after && (
+                <span className="text-muted-foreground whitespace-pre-wrap">
+                  {after}
+                </span>
+              )}
             </>
           )
         })()
       ) : (
-        <span className="opacity-50">{content}</span>
+        <span className="text-muted-foreground whitespace-pre-wrap">
+          {content}
+        </span>
       )}
-    </button>
+    </Button>
   )
 }
 

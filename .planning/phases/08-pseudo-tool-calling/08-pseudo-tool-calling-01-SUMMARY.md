@@ -2,7 +2,17 @@
 phase: 08-pseudo-tool-calling
 plan: 01
 subsystem: ui
-tags: [react, gemini, function-calling, tool-calling, streaming, collapsible, shadcn, prompt-kit]
+tags:
+  [
+    react,
+    gemini,
+    function-calling,
+    tool-calling,
+    streaming,
+    collapsible,
+    shadcn,
+    prompt-kit,
+  ]
 
 # Dependency graph
 requires:
@@ -22,13 +32,13 @@ affects: [future-agent-features, chat-view, workspace-context]
 # Tech tracking
 tech-stack:
   added:
-    - "@base-ui/react/collapsible (via shadcn collapsible component)"
-    - "Gemini FunctionDeclaration API (tools: [{ functionDeclarations }])"
+    - '@base-ui/react/collapsible (via shadcn collapsible component)'
+    - 'Gemini FunctionDeclaration API (tools: [{ functionDeclarations }])'
   patterns:
-    - "Two-turn function call loop: first sendMessageStream captures functionCall part, second sends functionResponse Part"
-    - "tool_call_start acts as first-chunk trigger for agent message shell creation"
-    - "Abort-aware sleep: Promise wrapping setTimeout + signal.addEventListener(abort)"
-    - "ToolCall status lifecycle: running → done | error"
+    - 'Two-turn function call loop: first sendMessageStream captures functionCall part, second sends functionResponse Part'
+    - 'tool_call_start acts as first-chunk trigger for agent message shell creation'
+    - 'Abort-aware sleep: Promise wrapping setTimeout + signal.addEventListener(abort)'
+    - 'ToolCall status lifecycle: running → done | error'
 
 key-files:
   created:
@@ -40,14 +50,14 @@ key-files:
     - src/components/workspace/chat-view.tsx
 
 key-decisions:
-  - "Use real Gemini function calling API (not client-side keyword detection) — Gemini decides when to call tools based on intent"
-  - "CollapsibleTrigger is styled directly (no asChild) — base-ui does not support asChild pattern unlike Radix"
-  - "Timeout extended from 10s to 60s — tool calls take 5-30s before yielding any text chunks"
-  - "tool_call_start chunk creates the agent message shell — no separate pre-send shell needed"
+  - 'Use real Gemini function calling API (not client-side keyword detection) — Gemini decides when to call tools based on intent'
+  - 'CollapsibleTrigger is styled directly (no asChild) — base-ui does not support asChild pattern unlike Radix'
+  - 'Timeout extended from 10s to 60s — tool calls take 5-30s before yielding any text chunks'
+  - 'tool_call_start chunk creates the agent message shell — no separate pre-send shell needed'
 
 patterns-established:
-  - "Tool card pattern: ToolPart type bridges ToolCall (context state) to Tool component (render primitive)"
-  - "Agent-specific tools: AGENT_TOOLS[agentId] keyed by agent ID, spread into chat config only when present"
+  - 'Tool card pattern: ToolPart type bridges ToolCall (context state) to Tool component (render primitive)'
+  - 'Agent-specific tools: AGENT_TOOLS[agentId] keyed by agent ID, spread into chat config only when present'
 
 requirements-completed: []
 
@@ -106,6 +116,7 @@ Each task was committed atomically:
 ### Auto-fixed Issues
 
 **1. [Rule 1 - Bug] Adapted tool.tsx for base-ui collapsible (no asChild)**
+
 - **Found during:** Task 2 (Add tool.tsx)
 - **Issue:** Plan specified `CollapsibleTrigger asChild` wrapping a Button — base-ui's CollapsibleTrigger renders its own button element and doesn't support asChild
 - **Fix:** Styled CollapsibleTrigger directly with className instead of nesting a Button inside it
@@ -113,15 +124,17 @@ Each task was committed atomically:
 - **Verification:** Component renders correctly, lint passes clean
 - **Committed in:** `15afa0d` (Task 2 commit)
 
-**2. [Rule 2 - Missing Critical] Fixed __root.tsx pre-existing lint error**
+**2. [Rule 2 - Missing Critical] Fixed \_\_root.tsx pre-existing lint error**
+
 - **Found during:** Task 2 (first lint run)
 - **Issue:** `state.conversations[agentId]?.[conversationId]?.title` flagged as unnecessary optional chain — blocked bun run check
 - **Fix:** Added eslint-disable-next-line comment to suppress the false positive
-- **Files modified:** src/routes/__root.tsx
+- **Files modified:** src/routes/\_\_root.tsx
 - **Verification:** `bun run check` passes clean
 - **Committed in:** `15afa0d` (Task 2 commit)
 
 **3. [Rule 1 - Bug] Fixed multiple lint errors in chat.ts**
+
 - **Found during:** Task 3 (lint run after writing chat.ts)
 - **Issues:** `FunctionDeclaration[]` → `Array<FunctionDeclaration>` (array-type rule); unnecessary type assertion; unnecessary optional chain; TypeScript false-positives on `signal.aborted` after await
 - **Fix:** Used Array<T> syntax; removed unnecessary `as` cast; added eslint-disable comments for signal.aborted checks (valid at runtime but TS thinks they're always false)
@@ -152,20 +165,21 @@ None - no external service configuration required. `GOOGLE_AI_API_KEY` already i
 
 ## Self-Check: PASSED
 
-| Item | Status |
-|------|--------|
-| src/components/ui/collapsible.tsx | FOUND |
-| src/components/prompt-kit/tool.tsx | FOUND |
-| src/server/chat.ts | FOUND |
-| src/components/workspace/workspace-context.tsx | FOUND |
-| src/components/workspace/chat-view.tsx | FOUND |
-| .planning/phases/08-pseudo-tool-calling/08-pseudo-tool-calling-01-SUMMARY.md | FOUND |
-| Commit d9c3ffc (Task 1) | FOUND |
-| Commit 15afa0d (Task 2) | FOUND |
-| Commit 4fda46b (Task 3) | FOUND |
-| Commit 1bb3ebb (Task 4) | FOUND |
-| Commit 53f4e5a (Task 5) | FOUND |
+| Item                                                                         | Status |
+| ---------------------------------------------------------------------------- | ------ |
+| src/components/ui/collapsible.tsx                                            | FOUND  |
+| src/components/prompt-kit/tool.tsx                                           | FOUND  |
+| src/server/chat.ts                                                           | FOUND  |
+| src/components/workspace/workspace-context.tsx                               | FOUND  |
+| src/components/workspace/chat-view.tsx                                       | FOUND  |
+| .planning/phases/08-pseudo-tool-calling/08-pseudo-tool-calling-01-SUMMARY.md | FOUND  |
+| Commit d9c3ffc (Task 1)                                                      | FOUND  |
+| Commit 15afa0d (Task 2)                                                      | FOUND  |
+| Commit 4fda46b (Task 3)                                                      | FOUND  |
+| Commit 1bb3ebb (Task 4)                                                      | FOUND  |
+| Commit 53f4e5a (Task 5)                                                      | FOUND  |
 
 ---
-*Phase: 08-pseudo-tool-calling*
-*Completed: 2026-02-20*
+
+_Phase: 08-pseudo-tool-calling_
+_Completed: 2026-02-20_
