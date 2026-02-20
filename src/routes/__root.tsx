@@ -1,17 +1,19 @@
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import {
+  createRootRoute,
   HeadContent,
   Outlet,
   Scripts,
-  createRootRoute,
   useMatches,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import 'streamdown/styles.css'
-import appCss from '../styles.css?url'
+import { AGENTS } from '@/components/workspace/agents'
 import { TaskStack } from '@/components/workspace/task-stack'
 import { WorkspaceProvider } from '@/components/workspace/workspace-context'
 import { WorkspaceSidebar } from '@/components/workspace/workspace-sidebar'
+import { cn } from '@/lib/utils'
+import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -35,10 +37,41 @@ function AgentTitleBar() {
   if (!agentMatch) return null
 
   const { agentId } = agentMatch.params as { agentId: string }
+  const agent = AGENTS.find(a => a.id === agentId)
 
   return (
-    <div className="absolute inset-x-0 top-0 z-10 flex h-13.5 shrink-0 items-center border-b px-4">
+    <div className="absolute inset-x-0 top-0 z-10 flex h-13.5 shrink-0 items-center gap-3 px-4">
+      {agent && (
+        <div className="z-10 flex items-center gap-2.5">
+          <span
+            className={cn(
+              'flex size-7 shrink-0 items-center justify-center rounded-full text-sm',
+              agent.accentColor,
+            )}
+          >
+            {agent.emoji}
+          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-foreground text-sm font-semibold">
+              {agent.name}
+            </span>
+            <span className="text-muted-foreground text-xs">{agent.role}</span>
+          </div>
+        </div>
+      )}
+      <div className="flex-1" />
       <TaskStack agentId={agentId} />
+      <div
+        className="pointer-events-none absolute top-0 left-0 h-20 w-full select-none"
+        style={{
+          background:
+            'linear-gradient(to bottom, var(--background), transparent)',
+          maskImage: 'linear-gradient(to bottom, black 30%, transparent)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
+        }}
+      />
     </div>
   )
 }
