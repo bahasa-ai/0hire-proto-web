@@ -1,6 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { code } from '@streamdown/code'
-import { ArrowUp, Paperclip, Square, X } from 'lucide-react'
+import {
+  ArrowUp,
+  Copy,
+  Paperclip,
+  Pencil,
+  Square,
+  ThumbsDown,
+  ThumbsUp,
+  Trash,
+  X,
+} from 'lucide-react'
 import { Streamdown } from 'streamdown'
 import { AGENT_SYSTEM_PROMPTS } from './agents'
 import { EmptyChat } from './empty-chat'
@@ -20,8 +30,12 @@ import {
   ChatContainerContent,
   ChatContainerRoot,
 } from '@/components/prompt-kit/chat-container'
-import { FeedbackBar } from '@/components/prompt-kit/feedback-bar'
-import { Message, MessageContent } from '@/components/prompt-kit/message'
+import {
+  Message,
+  MessageAction,
+  MessageActions,
+  MessageContent,
+} from '@/components/prompt-kit/message'
 import {
   PromptInput,
   PromptInputAction,
@@ -343,19 +357,50 @@ export function ChatView({
       ) : (
         <ChatContainerRoot className="relative min-h-0 flex-1">
           <ChatContainerContent className="px-2 py-4">
-            {messages.map(msg =>
-              msg.role === 'user' ? (
+            {messages.map((msg, index) => {
+              const isLast = index === messages.length - 1
+
+              return msg.role === 'user' ? (
                 <Message
                   key={msg.id}
-                  className="mx-auto flex w-full max-w-3xl justify-end px-2 py-1"
+                  className="mx-auto flex w-full max-w-3xl flex-col items-end px-2 py-1"
                 >
-                  <div className="max-w-[65%]">
-                    <p className="text-muted-foreground mb-1 text-right text-[11px]">
+                  <div className="group flex max-w-[65%] flex-col items-end gap-1">
+                    <p className="text-muted-foreground text-[11px]">
                       {formatTime(msg.timestamp)}
                     </p>
                     <MessageContent className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed">
                       {msg.content}
                     </MessageContent>
+                    <MessageActions className="flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                      <MessageAction tooltip="Edit" delayDuration={100}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full"
+                        >
+                          <Pencil />
+                        </Button>
+                      </MessageAction>
+                      <MessageAction tooltip="Delete" delayDuration={100}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full"
+                        >
+                          <Trash />
+                        </Button>
+                      </MessageAction>
+                      <MessageAction tooltip="Copy" delayDuration={100}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="rounded-full"
+                        >
+                          <Copy />
+                        </Button>
+                      </MessageAction>
+                    </MessageActions>
                   </div>
                 </Message>
               ) : (
@@ -364,7 +409,7 @@ export function ChatView({
                   className="mx-auto flex w-full max-w-3xl items-start gap-3 px-2 py-1.5"
                 >
                   <AgentAvatar agent={agent} />
-                  <div className="min-w-0 flex-1">
+                  <div className="group min-w-0 flex-1">
                     <div className="mb-0.5 flex items-baseline gap-2">
                       <span className="text-foreground text-sm font-semibold">
                         {agent.name}
@@ -427,31 +472,45 @@ export function ChatView({
                       </Streamdown>
                     </MessageContent>
                     {!msg.isStreaming && !msg.interrupted && (
-                      <div className="mt-1">
-                        <FeedbackBar
-                          onHelpful={() =>
-                            dispatch({
-                              type: 'SET_FEEDBACK',
-                              agentId: agent.id,
-                              messageId: msg.id,
-                              feedback: 'helpful',
-                            })
-                          }
-                          onNotHelpful={() =>
-                            dispatch({
-                              type: 'SET_FEEDBACK',
-                              agentId: agent.id,
-                              messageId: msg.id,
-                              feedback: 'not-helpful',
-                            })
-                          }
-                        />
-                      </div>
+                      <MessageActions
+                        className={cn(
+                          '-ml-2.5 flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100',
+                          isLast && 'opacity-100',
+                        )}
+                      >
+                        <MessageAction tooltip="Copy" delayDuration={100}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full"
+                          >
+                            <Copy />
+                          </Button>
+                        </MessageAction>
+                        <MessageAction tooltip="Upvote" delayDuration={100}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full"
+                          >
+                            <ThumbsUp />
+                          </Button>
+                        </MessageAction>
+                        <MessageAction tooltip="Downvote" delayDuration={100}>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full"
+                          >
+                            <ThumbsDown />
+                          </Button>
+                        </MessageAction>
+                      </MessageActions>
                     )}
                   </div>
                 </Message>
-              ),
-            )}
+              )
+            })}
 
             {isWaitingForFirstToken && (
               <div className="mx-auto flex w-full max-w-3xl items-start gap-3 px-2 py-1.5">
