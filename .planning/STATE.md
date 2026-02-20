@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-**Milestone complete.** All 8 phases shipped. No pending phases.
+**Phase 9: Unified Agent Chat (Remove Multi-Conversation)** — pending planning.
 
 ## Execution History
 
@@ -44,9 +44,9 @@
 
 ## Next Action
 
-Milestone complete. Use `/gsd:new-milestone` to start the next milestone or `/gsd:add-phase` to queue new work.
+Use `/gsd:plan-phase` to create the Phase 9 plan, then `/gsd:execute-phase` to implement it.
 
 ---
 
 _Last updated: 2026-02-20_
-_Last session: Scrapped Phase 9 (Thesys Generative UI) — integration requires full server-side rewrite and breaks existing tool call UX_
+_Last session: Added Phase 9 — collapse multi-conversation state to single flat chat per agent; remove history accordion, LayoutGroup, new-chat affordances_

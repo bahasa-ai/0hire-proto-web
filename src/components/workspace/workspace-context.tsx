@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer } from 'react'
-import type { ReactNode } from 'react'
+import type { Dispatch, ReactNode } from 'react'
 
 export interface ToolCall {
   id: string
@@ -172,7 +172,7 @@ export function getActiveMessages(
 
 interface WorkspaceContextValue {
   state: WorkspaceState
-  dispatch: React.Dispatch<WorkspaceAction>
+  dispatch: Dispatch<WorkspaceAction>
 }
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)

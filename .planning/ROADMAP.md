@@ -2,9 +2,9 @@
 
 ## Overview
 
-Eight-phase build from static shell to fully functional AI workspace. All 8 phases are complete.
+Nine-phase build from static shell to fully functional AI workspace. Phases 1–8 complete.
 
-The single core value — a non-technical operator can talk to their AI team and see exactly what it's doing — is realized after Phase 4. Phase 5 makes it demo-ready. Phase 6 adds conversation management. Phase 7 floats the sidebar. Phase 8 makes tool use visible.
+The single core value — a non-technical operator can talk to their AI team and see exactly what it's doing — is realized after Phase 4. Phase 5 makes it demo-ready. Phase 6 adds conversation management. Phase 7 floats the sidebar. Phase 8 makes tool use visible. Phase 9 simplifies back to one chat per agent.
 
 ---
 
@@ -229,6 +229,35 @@ Plans:
 5. Non-task messages (e.g. "what's your name?") show no tool call cards — just a streamed text reply
 6. The full sequence — tool cards → text stream — feels coherent and natural, not jarring
 
+### Phase 9: Unified Agent Chat (Remove Multi-Conversation)
+
+**Goal:** Collapse the per-agent multi-conversation architecture down to a single flat message list per agent. Each agent has one persistent chat — no conversation switching, no history accordion, no "Start new chat" affordance. The sidebar keeps the title bar and agent list but loses all history/conversation UI.
+
+**Depends on:** Phase 8
+
+**Key work:**
+
+- **`workspace-context.tsx`:** Replace `conversations: Record<agentId, Record<convoId, Conversation>>` + `activeConversationId` with `messages: Record<agentId, ChatMessage[]>`. Remove `Conversation` type, `makeConversation`, `setConversation`, `setActiveConvo`, `ensureConversation`, `appendToChannel`, `getConversationList`. Remove actions: `CREATE_CONVERSATION`, `SWITCH_CONVERSATION`, `CLEAR_ACTIVE_CONVERSATION`, `RENAME_CONVERSATION`, `DELETE_CONVERSATION`. All message actions operate directly on the agent's flat array.
+- **`agent-channel-item.tsx`:** Remove `AnimatePresence` + `motion.div` history accordion, `ScrollArea`, `HistoryLink`, `DropdownMenu` rename/delete controls, inline rename input, `editingId`/`editValue` state, `streamingConvoId` detection. Remove "Start new chat" hover text swap — just show `agent.role` always. Remove `motion.div` layout wrapper (the `LayoutGroup` in sidebar can go too). Keep the agent row button with avatar, name, role, and status dot.
+- **`workspace-sidebar.tsx`:** Remove `LayoutGroup` import and wrapper. Remove the `Plus` icon / "New chat" link in the agents section header. Keep the `Øhire` title button, the agent nav list, and the user footer.
+- **Routes — simplify to single level:** Delete `src/routes/$agentId/$conversationId.tsx`. Flatten `src/routes/$agentId/index.tsx` — remove conversation creation/navigation logic. `ChatView` receives only `agent`; no `conversationId` or `onConversationCreated` props.
+- **`chat-view.tsx`:** Remove `conversationId` and `onConversationCreated` props. Remove `generateId`, conversation-creation dispatch in `handleSend`. Read messages directly from `state.messages[agent.id]`. Abort/reset effect keyed only on `agent.id` (no `activeConvoId`).
+
+**Success Criteria — All must be TRUE:**
+
+1. Each agent has exactly one persistent message list — no conversations, no switching, no history items in the sidebar
+2. The sidebar shows only the agent list (avatar, name, role, status dot) with no history accordion or "New chat" button
+3. Clicking an agent in the sidebar switches to that agent's single chat (existing messages preserved)
+4. Sending a message and streaming a response works identically to Phase 8 — tool cards, markdown, abort, retry, timeout
+5. `bun run check` passes with no type errors or lint warnings
+6. No dead code remains: `Conversation` type, `getConversationList`, conversation dispatch actions, `LayoutGroup`, `AnimatePresence` history accordion are all gone
+
+**Plans:**
+
+- [ ] 01-PLAN.md — Unified agent chat simplification
+
+---
+
 ## Progress
 
 | Phase                               | Status      | Completed  |
@@ -241,8 +270,9 @@ Plans:
 | 6. Chat History Sidebar             | ✅ Complete | 2026-02-19 |
 | 7. Floating Sidebar Redesign        | ✅ Complete | 2026-02-20 |
 | 8. Pseudo-Tool Calling              | ✅ Complete | 2026-02-20 |
+| 9. Unified Agent Chat               | ⬜ Pending  |            |
 
-**Execution order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+**Execution order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
 
 ---
 

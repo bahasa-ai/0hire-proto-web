@@ -46,7 +46,7 @@ import { TextShimmer } from '@/components/prompt-kit/text-shimmer'
 import { Tool } from '@/components/prompt-kit/tool'
 import { Button } from '@/components/ui/button'
 import { streamChatFn } from '@/server/chat'
-// eslint-disable-next-line import/order -- prettier sorts this after @/ imports
+// eslint-disable-next-line import/order -- prettier sorts type imports after @/ aliases
 import type { ChatMessage } from './workspace-context'
 
 type ChatErrorType = 'rate-limited' | 'network' | 'timeout' | 'generic' | null
@@ -104,6 +104,123 @@ function formatTime(ts: number): string {
     minute: '2-digit',
     hour12: true,
   })
+}
+
+interface MessageBubbleProps {
+  msg: ChatMessage
+}
+
+function UserBubble({ msg }: MessageBubbleProps) {
+  return (
+    <Message className="mx-auto flex w-full max-w-3xl flex-col items-end px-2 py-1">
+      <div className="group flex max-w-[65%] flex-col items-end gap-1">
+        <p className="text-muted-foreground text-[11px]">
+          {formatTime(msg.timestamp)}
+        </p>
+        <MessageContent className="bg-muted text-foreground rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed">
+          {msg.content}
+        </MessageContent>
+        <MessageActions className="flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+          <MessageAction tooltip="Edit" delayDuration={100}>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Pencil />
+            </Button>
+          </MessageAction>
+          <MessageAction tooltip="Delete" delayDuration={100}>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Trash />
+            </Button>
+          </MessageAction>
+          <MessageAction tooltip="Copy" delayDuration={100}>
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <Copy />
+            </Button>
+          </MessageAction>
+        </MessageActions>
+      </div>
+    </Message>
+  )
+}
+
+function AgentBubble({ msg }: MessageBubbleProps) {
+  return (
+    <Message className="mx-auto flex w-full max-w-3xl flex-col px-2 py-1.5">
+      <div className="group min-w-0">
+        <div className="mb-0.5 flex items-baseline gap-2">
+          <span className="text-muted-foreground text-[11px]">
+            {formatTime(msg.timestamp)}
+          </span>
+          {msg.interrupted && (
+            <span className="text-muted-foreground/50 text-[11px]">
+              · interrupted
+            </span>
+          )}
+        </div>
+        {msg.thinking && (
+          <div className="mb-2">
+            <Reasoning>
+              <ReasoningTrigger>
+                {msg.isThinking ? (
+                  <TextShimmer className="text-sm font-medium">
+                    Thinking
+                  </TextShimmer>
+                ) : (
+                  <span className="text-muted-foreground text-sm">
+                    Thought for a moment
+                  </span>
+                )}
+              </ReasoningTrigger>
+              <ReasoningContent markdown>{msg.thinking}</ReasoningContent>
+            </Reasoning>
+          </div>
+        )}
+        {msg.toolCalls && msg.toolCalls.length > 0 && (
+          <div className="mb-2">
+            {msg.toolCalls.map(tc => (
+              <Tool
+                key={tc.id}
+                toolPart={{
+                  type: tc.name,
+                  state: toolCallState(tc.status),
+                  input: tc.input,
+                  output: tc.output,
+                  toolCallId: tc.id,
+                }}
+              />
+            ))}
+          </div>
+        )}
+        <MessageContent className="text-foreground rounded-none bg-transparent p-0 text-sm leading-relaxed">
+          <Streamdown
+            plugins={{ code }}
+            isAnimating={msg.isStreaming ?? false}
+            animated={msg.isStreaming ?? false}
+          >
+            {msg.content}
+          </Streamdown>
+        </MessageContent>
+        {!msg.isStreaming && !msg.interrupted && (
+          <MessageActions className="-ml-2.5 flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+            <MessageAction tooltip="Copy" delayDuration={100}>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Copy />
+              </Button>
+            </MessageAction>
+            <MessageAction tooltip="Upvote" delayDuration={100}>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <ThumbsUp />
+              </Button>
+            </MessageAction>
+            <MessageAction tooltip="Downvote" delayDuration={100}>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <ThumbsDown />
+              </Button>
+            </MessageAction>
+          </MessageActions>
+        )}
+      </div>
+    </Message>
+  )
 }
 
 export function ChatView({ agent }: ChatViewProps) {
@@ -302,8 +419,9 @@ export function ChatView({ agent }: ChatViewProps) {
   const handleSubmit = useCallback(() => handleSend(input), [input, handleSend])
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    if (event.target.files) {
-      setFiles(prev => [...prev, ...Array.from(event.target.files!)])
+    const newFiles = event.target.files
+    if (newFiles) {
+      setFiles(prev => [...prev, ...Array.from(newFiles)])
     }
   }
 
@@ -323,146 +441,13 @@ export function ChatView({ agent }: ChatViewProps) {
       ) : (
         <ChatContainerRoot className="relative min-h-0 flex-1">
           <ChatContainerContent className="px-2 py-4">
-            {messages.map(msg => {
-              return msg.role === 'user' ? (
-                <Message
-                  key={msg.id}
-                  className="mx-auto flex w-full max-w-3xl flex-col items-end px-2 py-1"
-                >
-                  <div className="group flex max-w-[65%] flex-col items-end gap-1">
-                    <p className="text-muted-foreground text-[11px]">
-                      {formatTime(msg.timestamp)}
-                    </p>
-                    <MessageContent className="bg-muted text-foreground rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed">
-                      {msg.content}
-                    </MessageContent>
-                    <MessageActions className="flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                      <MessageAction tooltip="Edit" delayDuration={100}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="rounded-full"
-                        >
-                          <Pencil />
-                        </Button>
-                      </MessageAction>
-                      <MessageAction tooltip="Delete" delayDuration={100}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="rounded-full"
-                        >
-                          <Trash />
-                        </Button>
-                      </MessageAction>
-                      <MessageAction tooltip="Copy" delayDuration={100}>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="rounded-full"
-                        >
-                          <Copy />
-                        </Button>
-                      </MessageAction>
-                    </MessageActions>
-                  </div>
-                </Message>
+            {messages.map(msg =>
+              msg.role === 'user' ? (
+                <UserBubble key={msg.id} msg={msg} />
               ) : (
-                <Message
-                  key={msg.id}
-                  className="mx-auto flex w-full max-w-3xl flex-col px-2 py-1.5"
-                >
-                  <div className="group min-w-0">
-                    <div className="mb-0.5 flex items-baseline gap-2">
-                      <span className="text-muted-foreground text-[11px]">
-                        {formatTime(msg.timestamp)}
-                      </span>
-                      {msg.interrupted && (
-                        <span className="text-muted-foreground/50 text-[11px]">
-                          · interrupted
-                        </span>
-                      )}
-                    </div>
-                    {msg.thinking && (
-                      <div className="mb-2">
-                        <Reasoning>
-                          <ReasoningTrigger>
-                            {msg.isThinking ? (
-                              <TextShimmer className="text-sm font-medium">
-                                Thinking
-                              </TextShimmer>
-                            ) : (
-                              <span className="text-muted-foreground text-sm">
-                                Thought for a moment
-                              </span>
-                            )}
-                          </ReasoningTrigger>
-                          <ReasoningContent markdown>
-                            {msg.thinking}
-                          </ReasoningContent>
-                        </Reasoning>
-                      </div>
-                    )}
-                    {msg.toolCalls && msg.toolCalls.length > 0 && (
-                      <div className="mb-2">
-                        {msg.toolCalls.map(tc => (
-                          <Tool
-                            key={tc.id}
-                            toolPart={{
-                              type: tc.name,
-                              state: toolCallState(tc.status),
-                              input: tc.input,
-                              output: tc.output,
-                              toolCallId: tc.id,
-                            }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                    <MessageContent className="text-foreground rounded-none bg-transparent p-0 text-sm leading-relaxed">
-                      <Streamdown
-                        plugins={{ code }}
-                        isAnimating={msg.isStreaming ?? false}
-                        animated={msg.isStreaming ?? false}
-                      >
-                        {msg.content}
-                      </Streamdown>
-                    </MessageContent>
-                    {!msg.isStreaming && !msg.interrupted && (
-                      <MessageActions className="-ml-2.5 flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-                        <MessageAction tooltip="Copy" delayDuration={100}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-full"
-                          >
-                            <Copy />
-                          </Button>
-                        </MessageAction>
-                        <MessageAction tooltip="Upvote" delayDuration={100}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-full"
-                          >
-                            <ThumbsUp />
-                          </Button>
-                        </MessageAction>
-                        <MessageAction tooltip="Downvote" delayDuration={100}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="rounded-full"
-                          >
-                            <ThumbsDown />
-                          </Button>
-                        </MessageAction>
-                      </MessageActions>
-                    )}
-                  </div>
-                </Message>
-              )
-            })}
+                <AgentBubble key={msg.id} msg={msg} />
+              ),
+            )}
 
             {isWaitingForFirstToken && (
               <div className="mx-auto flex w-full max-w-3xl px-2 py-1.5">

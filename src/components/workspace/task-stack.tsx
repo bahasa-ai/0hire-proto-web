@@ -11,7 +11,7 @@ const EXPANDED_GAP = 6
 const MAX_VISIBLE = 3
 const EASING = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
-function restingY(count: number) {
+function restingY(count: number): number {
   if (count <= 1) return 0
   if (count === 2) return -8
   return -12
@@ -35,7 +35,7 @@ const PRIORITY: Record<ToolCall['status'], number> = {
   done: 2,
 }
 
-function humanize(name: string) {
+function humanize(name: string): string {
   return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
@@ -85,11 +85,10 @@ export function TaskStack({ agentId }: TaskStackProps) {
 
           const scale = expanded ? 1 : 1 - index * SCALE_STEP
 
-          const opacity = expanded
-            ? 1
-            : index >= MAX_VISIBLE
-              ? 0
-              : 1 - index * 0.15
+          let opacity = 1
+          if (!expanded) {
+            opacity = index >= MAX_VISIBLE ? 0 : 1 - index * 0.15
+          }
 
           return (
             <div

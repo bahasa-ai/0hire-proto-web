@@ -1,4 +1,4 @@
-import { Link, useParams } from '@tanstack/react-router'
+import { useParams } from '@tanstack/react-router'
 import { ChevronDown, MoreHorizontal } from 'lucide-react'
 import { AgentChannelItem } from './agent-channel-item'
 import { AGENTS, CURRENT_USER, DEFAULT_AGENT_ID } from './agents'
@@ -58,15 +58,13 @@ export function WorkspaceSidebar() {
           </p>
         </div>
 
-        <>
-          {AGENTS.map(agent => (
-            <AgentChannelItem
-              key={agent.id}
-              agent={agent}
-              isActive={agent.id === activeId}
-            />
-          ))}
-        </>
+        {AGENTS.map(agent => (
+          <AgentChannelItem
+            key={agent.id}
+            agent={agent}
+            isActive={agent.id === activeId}
+          />
+        ))}
       </nav>
 
       <div className="border-sidebar-border border-t px-2 py-2">

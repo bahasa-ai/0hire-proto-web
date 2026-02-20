@@ -37,7 +37,7 @@ function AgentTitleBar() {
   const { agentId } = agentMatch.params as { agentId: string }
 
   return (
-    <div className="relative z-10 flex h-13.5 shrink-0 items-center border-b px-4">
+    <div className="absolute inset-x-0 top-0 z-10 flex h-13.5 shrink-0 items-center border-b px-4">
       <TaskStack agentId={agentId} />
     </div>
   )
@@ -48,7 +48,7 @@ function RootComponent() {
     <WorkspaceProvider>
       <div className="animate-in fade-in flex h-svh p-3 duration-300">
         <WorkspaceSidebar />
-        <main className="flex min-w-0 flex-1 flex-col">
+        <main className="relative flex min-w-0 flex-1 flex-col">
           <AgentTitleBar />
           <Outlet />
         </main>
