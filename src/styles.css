@@ -254,6 +254,53 @@
   display: none;
 }
 
+/* View transitions — agent page switch */
+
+@keyframes vt-agent-out {
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+    filter: blur(8px);
+  }
+}
+
+@keyframes vt-agent-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(8px);
+  }
+}
+
+::view-transition-group(agent-content) {
+  animation: none;
+  overflow: clip;
+}
+
+::view-transition-old(agent-content) {
+  animation: vt-agent-out 320ms cubic-bezier(0.4, 0, 0.1, 1) both;
+  object-fit: none;
+  object-position: top;
+}
+
+::view-transition-new(agent-content) {
+  animation: vt-agent-in 320ms cubic-bezier(0.4, 0, 0.1, 1) 40ms both;
+  object-fit: none;
+  object-position: top;
+}
+
+/* Freeze these elements during view transitions (no cross-fade) */
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-old(sidebar),
+::view-transition-new(sidebar),
+::view-transition-old(chat-input),
+::view-transition-new(chat-input),
+::view-transition-old(agent-title),
+::view-transition-new(agent-title) {
+  animation: none;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
