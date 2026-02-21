@@ -12,12 +12,13 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Streamdown } from 'streamdown'
-import { AGENT_SYSTEM_PROMPTS } from './agents'
+import { AGENT_SYSTEM_PROMPTS, type Agent } from './agents'
 import { EmptyChat } from './empty-chat'
-import { getActiveMessages, useWorkspace } from './workspace-context'
-import type { ToolPart } from '@/components/prompt-kit/tool'
-import type { StreamChunk } from '@/server/chat'
-import type { Agent } from './agents'
+import {
+  getActiveMessages,
+  useWorkspace,
+  type ChatMessage,
+} from './workspace-context'
 import {
   ChatContainerContent,
   ChatContainerRoot,
@@ -43,11 +44,9 @@ import {
 import { ScrollButton } from '@/components/prompt-kit/scroll-button'
 import { SystemMessage } from '@/components/prompt-kit/system-message'
 import { TextShimmer } from '@/components/prompt-kit/text-shimmer'
-import { Tool } from '@/components/prompt-kit/tool'
+import { Tool, type ToolPart } from '@/components/prompt-kit/tool'
 import { Button } from '@/components/ui/button'
-import { streamChatFn } from '@/server/chat'
-// eslint-disable-next-line import/order -- prettier sorts type imports after @/ aliases
-import type { ChatMessage } from './workspace-context'
+import { streamChatFn, type StreamChunk } from '@/server/chat'
 
 type ChatErrorType = 'rate-limited' | 'network' | 'timeout' | 'generic' | null
 
@@ -165,7 +164,7 @@ function AgentBubble({ msg }: MessageBubbleProps) {
                     Thinking
                   </TextShimmer>
                 ) : (
-                  <span className="text-muted-foreground text-sm">
+                  <span className="text-muted-foreground text-xs">
                     Thought for a moment
                   </span>
                 )}
@@ -440,7 +439,7 @@ export function ChatView({ agent }: ChatViewProps) {
         </div>
       ) : (
         <ChatContainerRoot className="relative min-h-0 flex-1">
-          <ChatContainerContent className="px-2 py-4">
+          <ChatContainerContent className="px-2 pt-20 pb-4">
             {messages.map(msg =>
               msg.role === 'user' ? (
                 <UserBubble key={msg.id} msg={msg} />
