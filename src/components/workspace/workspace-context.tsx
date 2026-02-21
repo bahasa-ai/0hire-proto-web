@@ -65,6 +65,12 @@ type WorkspaceAction =
       taskId: string
       status: TaskStatus
     }
+  | {
+      type: 'SET_STEPS'
+      agentId: string
+      messageId: string
+      steps: Array<AgentStep>
+    }
 
 // -- Helpers --
 
@@ -149,6 +155,11 @@ function workspaceReducer(
           s.id === action.stepId ? { ...s, ...action.update } : s,
         ),
       }))
+
+    case 'SET_STEPS':
+      return updateMessage(state, action.agentId, action.messageId, {
+        steps: action.steps,
+      })
 
     case 'ADD_TASK':
       return {

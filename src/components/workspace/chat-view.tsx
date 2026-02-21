@@ -15,7 +15,6 @@ import { Streamdown } from 'streamdown'
 import { AgentPlanCard } from './agent-plan-card'
 import { AGENT_SYSTEM_PROMPTS } from './agents'
 import { EmptyChat } from './empty-chat'
-import { getAgentSteps, isTaskOriented } from './tool-calls'
 import { getActiveMessages, useWorkspace } from './workspace-context'
 import type { StreamChunk } from '@/server/chat'
 import {
@@ -48,8 +47,6 @@ import { streamChatFn } from '@/server/chat'
 // eslint-disable-next-line import/order -- prettier conflicts with ESLint type-import grouping
 import type { Agent } from './agents'
 // eslint-disable-next-line import/order -- prettier conflicts with ESLint type-import grouping
-import type { Task } from './tasks'
-// eslint-disable-next-line import/order
 import type { AgentStep, ChatMessage } from './workspace-context'
 
 type ChatErrorType = 'rate-limited' | 'network' | 'timeout' | 'generic' | null
@@ -268,17 +265,13 @@ export function ChatView({ agent }: ChatViewProps) {
   useEffect(() => () => abortCurrentStream(), [])
 
   const runStream = useCallback(
-    async (allMessages: Array<ChatMessage>, existingMessageId?: string) => {
+    async (allMessages: Array<ChatMessage>) => {
       const systemPrompt =
         AGENT_SYSTEM_PROMPTS[agent.id] ??
         `You are ${agent.name}, an AI assistant.`
 
       setError(null)
-
-      // Skip shimmer when reusing an existing message shell (task-oriented flow)
-      if (!existingMessageId) {
-        setIsWaitingForFirstToken(true)
-      }
+      setIsWaitingForFirstToken(true)
 
       timeoutRef.current = setTimeout(() => {
         abortCurrentStream()
@@ -291,10 +284,8 @@ export function ChatView({ agent }: ChatViewProps) {
           data: { messages: allMessages, systemPrompt },
         })
 
-        const agentMessageId = existingMessageId ?? generateId()
-
-        // When reusing an existing shell, skip START_STREAMING on first chunk
-        let messageShellCreated = !!existingMessageId
+        const agentMessageId = generateId()
+        let messageShellCreated = false
 
         streamingRef.current = {
           generator,
@@ -302,43 +293,179 @@ export function ChatView({ agent }: ChatViewProps) {
           agentId: agent.id,
         }
 
-        for await (const chunk of generator) {
-          if (!messageShellCreated) {
-            messageShellCreated = true
-            clearStreamTimeout()
-            setIsWaitingForFirstToken(false)
+        // Creates the agent message shell on the first content arrival
+        function createShell(isThinking = false, initialContent = '') {
+          if (messageShellCreated) return
+          messageShellCreated = true
+          clearStreamTimeout()
+          setIsWaitingForFirstToken(false)
+          dispatch({
+            type: 'START_STREAMING',
+            agentId: agent.id,
+            message: makeMessage('agent', initialContent, agent.id, {
+              id: agentMessageId,
+              isStreaming: true,
+              isThinking: isThinking || undefined,
+            }),
+          })
+        }
 
-            dispatch({
-              type: 'START_STREAMING',
+        // Parses <plan>...</plan> from the buffered start of the stream
+        function parsePlan(
+          buf: string,
+        ): { steps: Array<AgentStep>; remainder: string } | null {
+          const closeIdx = buf.indexOf('</plan>')
+          if (closeIdx === -1 || !buf.startsWith('<plan>')) return null
+          const lines = buf
+            .slice('<plan>'.length, closeIdx)
+            .split('\n')
+            .map(s => s.trim())
+            .filter(Boolean)
+          const steps: Array<AgentStep> = lines.map((label, i) => ({
+            id: `step-${i}`,
+            label,
+            status: 'pending' as const,
+          }))
+          const remainder = buf
+            .slice(closeIdx + '</plan>'.length)
+            .replace(/^\n+/, '')
+          return { steps, remainder }
+        }
+
+        // Attaches steps to the message shell and starts the stagger animation
+        function startStepAnimation(steps: Array<AgentStep>) {
+          dispatch({
+            type: 'SET_STEPS',
+            agentId: agent.id,
+            messageId: agentMessageId,
+            steps,
+          })
+
+          const userMsg = allMessages.findLast(m => m.role === 'user')
+          const userText = userMsg?.content ?? ''
+          const taskId = generateId()
+          const now = new Date().toISOString()
+          dispatch({
+            type: 'ADD_TASK',
+            task: {
+              id: taskId,
               agentId: agent.id,
-              message: makeMessage(
-                'agent',
-                chunk.type === 'text' ? chunk.content : '',
-                agent.id,
-                {
-                  id: agentMessageId,
-                  isStreaming: true,
-                  isThinking: chunk.type === 'thinking',
-                  thinking:
-                    chunk.type === 'thinking' ? chunk.content : undefined,
-                },
-              ),
-            })
-          } else if (chunk.type === 'thinking') {
+              title:
+                userText.length > 70 ? `${userText.slice(0, 70)}…` : userText,
+              description: 'Requested via chat',
+              status: 'in-progress',
+              createdAt: now,
+              updatedAt: now,
+              chatCreated: true,
+            },
+          })
+
+          const animState = {
+            timers: [] as Array<ReturnType<typeof setTimeout>>,
+            messageId: agentMessageId,
+            cancelled: false,
+          }
+          stepAnimationRef.current = animState
+
+          dispatch({
+            type: 'UPDATE_STEP',
+            agentId: agent.id,
+            messageId: agentMessageId,
+            stepId: steps[0].id,
+            update: { status: 'running' },
+          })
+
+          for (const [i, step] of steps.entries()) {
+            const timer = setTimeout(
+              () => {
+                if (animState.cancelled) return
+                dispatch({
+                  type: 'UPDATE_STEP',
+                  agentId: agent.id,
+                  messageId: agentMessageId,
+                  stepId: step.id,
+                  update: { status: 'done' },
+                })
+                if (i + 1 < steps.length) {
+                  dispatch({
+                    type: 'UPDATE_STEP',
+                    agentId: agent.id,
+                    messageId: agentMessageId,
+                    stepId: steps[i + 1].id,
+                    update: { status: 'running' },
+                  })
+                } else {
+                  dispatch({
+                    type: 'UPDATE_TASK_STATUS',
+                    agentId: agent.id,
+                    taskId,
+                    status: 'done',
+                  })
+                  stepAnimationRef.current = null
+                }
+              },
+              STEP_STAGGER_MS * (i + 1),
+            )
+            animState.timers.push(timer)
+          }
+        }
+
+        // Buffer text chunks while scanning for a <plan> block at stream start
+        let parseState: 'buffering' | 'passthrough' = 'buffering'
+        let streamBuffer = ''
+
+        for await (const chunk of generator) {
+          if (chunk.type === 'thinking') {
+            createShell(true)
             dispatch({
               type: 'APPEND_THINKING_CHUNK',
               agentId: agent.id,
               messageId: agentMessageId,
               chunk: chunk.content,
             })
-          } else {
+            continue
+          }
+
+          if (parseState === 'passthrough') {
             dispatch({
               type: 'APPEND_STREAM_CHUNK',
               agentId: agent.id,
               messageId: agentMessageId,
               chunk: chunk.content,
             })
+            continue
           }
+
+          streamBuffer += chunk.content
+          const plan = parsePlan(streamBuffer)
+
+          if (plan) {
+            parseState = 'passthrough'
+            createShell()
+            startStepAnimation(plan.steps)
+            if (plan.remainder) {
+              dispatch({
+                type: 'APPEND_STREAM_CHUNK',
+                agentId: agent.id,
+                messageId: agentMessageId,
+                chunk: plan.remainder,
+              })
+            }
+          } else if (
+            // Give up on plan detection: not starting with '<' after a few chars,
+            // or buffer exceeds the max length for a plan block
+            (streamBuffer.length > 5 && !streamBuffer.startsWith('<')) ||
+            streamBuffer.length > 300
+          ) {
+            parseState = 'passthrough'
+            createShell(false, streamBuffer)
+            streamBuffer = ''
+          }
+        }
+
+        // Flush buffer if stream ended before plan detection resolved
+        if (parseState === 'buffering' && streamBuffer) {
+          createShell(false, streamBuffer)
         }
 
         // Ref may be cleared by abortCurrentStream() during async iteration
@@ -373,98 +500,7 @@ export function ChatView({ agent }: ChatViewProps) {
       })
       setInput('')
 
-      const allMessages = [...getActiveMessages(state, agent.id), userMessage]
-
-      if (isTaskOriented(trimmed)) {
-        const agentMessageId = generateId()
-        const taskId = generateId()
-        const stepLabels = getAgentSteps(agent.id)
-        const steps: Array<AgentStep> = stepLabels.map((label, i) => ({
-          id: `step-${i}`,
-          label,
-          status: 'pending',
-        }))
-
-        const task: Task = {
-          id: taskId,
-          agentId: agent.id,
-          title: trimmed.length > 70 ? `${trimmed.slice(0, 70)}…` : trimmed,
-          description: 'Requested via chat',
-          status: 'in-progress',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          chatCreated: true,
-        }
-        dispatch({ type: 'ADD_TASK', task })
-
-        dispatch({
-          type: 'START_STREAMING',
-          agentId: agent.id,
-          message: makeMessage('agent', '', agent.id, {
-            id: agentMessageId,
-            isStreaming: true,
-            steps,
-          }),
-        })
-
-        const animState = {
-          timers: [] as Array<ReturnType<typeof setTimeout>>,
-          messageId: agentMessageId,
-          cancelled: false,
-        }
-        stepAnimationRef.current = animState
-
-        dispatch({
-          type: 'UPDATE_STEP',
-          agentId: agent.id,
-          messageId: agentMessageId,
-          stepId: steps[0].id,
-          update: { status: 'running' },
-        })
-
-        // Stagger: mark each step done, then advance the next to running
-        steps.forEach((step, i) => {
-          const timer = setTimeout(
-            () => {
-              if (animState.cancelled) return
-              dispatch({
-                type: 'UPDATE_STEP',
-                agentId: agent.id,
-                messageId: agentMessageId,
-                stepId: step.id,
-                update: { status: 'done' },
-              })
-              if (i + 1 < steps.length) {
-                dispatch({
-                  type: 'UPDATE_STEP',
-                  agentId: agent.id,
-                  messageId: agentMessageId,
-                  stepId: steps[i + 1].id,
-                  update: { status: 'running' },
-                })
-              }
-            },
-            STEP_STAGGER_MS * (i + 1),
-          )
-          animState.timers.push(timer)
-        })
-
-        const totalMs = STEP_STAGGER_MS * steps.length
-        const streamTimer = setTimeout(() => {
-          if (animState.cancelled) return
-          stepAnimationRef.current = null
-          dispatch({
-            type: 'UPDATE_TASK_STATUS',
-            agentId: agent.id,
-            taskId,
-            status: 'done',
-          })
-          void runStream(allMessages, agentMessageId)
-        }, totalMs + 100)
-        animState.timers.push(streamTimer)
-      } else {
-        await runStream(allMessages)
-      }
+      await runStream([...getActiveMessages(state, agent.id), userMessage])
     },
     [agent.id, dispatch, isPending, state, runStream],
   )

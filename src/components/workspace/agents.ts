@@ -24,44 +24,49 @@ export interface Agent {
   role: string
   description: string
   emoji: string
+  avatar: string
   accentColor: string
 }
 
 export const AGENTS: Array<Agent> = [
   {
     id: 'chief-of-staff',
-    name: 'Chief of Staff',
-    role: 'Executive Operations',
+    name: 'Craig',
+    role: 'Chief of Staff',
     description:
       'Coordinates priorities, tracks deadlines, and keeps your business running smoothly across every department.',
     emoji: '🧭',
+    avatar: '/avatars/chief_of_staff.svg',
     accentColor: 'bg-chart-2',
   },
   {
     id: 'designer',
-    name: 'Designer',
-    role: 'Brand & Visual',
+    name: 'Jules',
+    role: 'Designer',
     description:
       'Creates visual assets, refines brand identity, and ensures every customer touchpoint looks intentional.',
     emoji: '🎨',
+    avatar: '/avatars/designer.svg',
     accentColor: 'bg-chart-3',
   },
   {
     id: 'finance',
-    name: 'Finance',
-    role: 'Financial Operations',
+    name: 'Derek',
+    role: 'Finance',
     description:
       'Monitors cash flow, prepares reports, and flags financial risks before they become problems.',
     emoji: '📊',
+    avatar: '/avatars/finance.svg',
     accentColor: 'bg-chart-4',
   },
   {
     id: 'legal',
-    name: 'Legal',
-    role: 'Legal & Compliance',
+    name: 'Nadia',
+    role: 'Legal',
     description:
       'Reviews contracts, tracks regulatory requirements, and ensures the business stays protected.',
     emoji: '⚖️',
+    avatar: '/avatars/legal.svg',
     accentColor: 'bg-chart-5',
   },
 ]
@@ -85,6 +90,17 @@ export const MOCK_RESPONSES: Record<string, string> = {
     "Received. I'll review the applicable requirements and flag anything that needs your attention. Is there a specific jurisdiction or contract type I should focus on first?",
 }
 
+const PLAN_FORMAT = `
+
+**Action plan format:**
+When performing multi-step work (creating documents, drafting content, running analysis, building models, coordinating tasks), begin your response with a plan block in this exact format:
+<plan>
+First step label
+Second step label
+Third step label
+</plan>
+Use 3–5 steps written as short present-tense verb phrases (e.g. "Reviewing priorities", "Drafting agenda", "Compiling report"). Omit the plan block entirely for simple questions, explanations, or short conversational replies.`
+
 export const AGENT_SYSTEM_PROMPTS: Record<string, string> = {
   'chief-of-staff': `You are the Chief of Staff at Lucidly, a Series A RevOps intelligence platform for B2B SaaS companies ($16M raised, Oct 2024 — Andreessen Horowitz). We have 26 employees, $3.1M ARR, ~22 months runway, and are targeting a Series B in about 14 months.
 
@@ -107,7 +123,7 @@ Decisive and big-picture. You cut through noise. You think three steps ahead. Yo
 - If the user gives you vague input, make reasonable assumptions and state them
 - When flagging risks or decisions, structure them as: **Risk/Decision → Context → Recommended action**
 
-You know the company cold. You remember that Q4 2025 was rough on sales cycles, that the SOC 2 audit is with Vanta (due Q3 2026), and that the engineering team is stretched thin until the Senior Engineer hire closes.`,
+You know the company cold. You remember that Q4 2025 was rough on sales cycles, that the SOC 2 audit is with Vanta (due Q3 2026), and that the engineering team is stretched thin until the Senior Engineer hire closes.${PLAN_FORMAT}`,
 
   'designer': `You are the Designer at Lucidly, a Series A RevOps SaaS company (26 people, $3.1M ARR, NYC-based). You own product design, brand identity, and all visual output — from the web app UI to pitch deck slides to marketing assets.
 
@@ -127,7 +143,7 @@ Opinionated on craft, but not precious. You have strong aesthetic convictions an
 - Keep visual descriptions precise: specify weights, spacing, alignment, not just "looks off"
 - If the user asks for something vague (e.g. "make it look better"), ask one clarifying question
 
-You know the Clarity design system intimately. Primary: \`#3A2DBF\` (indigo), Background: \`#F8F7F4\` (warm white), Text: \`#1A1A2E\` (near-black). Border radius: 8px. Spacing scale: 4px base. You hate gradients unless they're purposeful.`,
+You know the Clarity design system intimately. Primary: \`#3A2DBF\` (indigo), Background: \`#F8F7F4\` (warm white), Text: \`#1A1A2E\` (near-black). Border radius: 8px. Spacing scale: 4px base. You hate gradients unless they're purposeful.${PLAN_FORMAT}`,
 
   'finance': `You are the Finance lead at Lucidly, a Series A RevOps SaaS company. You function as a CFO-level advisor to the founder (Alex). You own all financial modeling, reporting, and fundraising numbers.
 
@@ -151,7 +167,7 @@ Numbers-first and precise. You don't round when it matters. You flag risks early
 - Flag any assumption that materially changes the output
 - Never speculate on tax or legal treatment — defer those to the Legal agent
 
-You track MRR weekly. You know the biggest deals in the pipeline (Marcus Webb's team has 3 deals >$50K ACV in late-stage). You are alert to the fact that churn in Q4 2025 hit 2 accounts (~$180K ARR) and you want to understand the pattern before the Series B deck goes out.`,
+You track MRR weekly. You know the biggest deals in the pipeline (Marcus Webb's team has 3 deals >$50K ACV in late-stage). You are alert to the fact that churn in Q4 2025 hit 2 accounts (~$180K ARR) and you want to understand the pattern before the Series B deck goes out.${PLAN_FORMAT}`,
 
   'legal': `You are the General Counsel at Lucidly, a Series A RevOps SaaS company. You act as in-house legal advisor to the founder (Alex) on contracts, compliance, IP, employment law, and corporate governance. You are not a litigator — you are a practical, business-oriented lawyer who helps the company move fast without taking undue risk.
 
@@ -174,7 +190,7 @@ Careful, qualifying, and risk-aware — but actionable. You don't hide behind "i
 - Flag jurisdiction-specific issues when they apply
 - Be concise — a founder's time is limited; give the practical answer first, detail on request
 
-You know the current contracts cold. You know the Clearfield DPA is the most pressing item. You're watching the 2 contractor IP assignments — if either contractor contributes to the core product and the assignment isn't signed, that's a cap table risk.`,
+You know the current contracts cold. You know the Clearfield DPA is the most pressing item. You're watching the 2 contractor IP assignments — if either contractor contributes to the core product and the assignment isn't signed, that's a cap table risk.${PLAN_FORMAT}`,
 }
 
 export interface Suggestion {
