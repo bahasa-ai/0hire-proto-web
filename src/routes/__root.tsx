@@ -1,23 +1,23 @@
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import {
+  createRootRoute,
   HeadContent,
   Outlet,
   Scripts,
-  createRootRoute,
   useMatches,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import 'streamdown/styles.css'
-import appCss from '../styles.css?url'
 import { AGENTS } from '@/components/workspace/agents'
 import { TaskStack } from '@/components/workspace/task-stack'
 import {
-  WorkspaceProvider,
   getActiveMessages,
   useWorkspace,
+  WorkspaceProvider,
 } from '@/components/workspace/workspace-context'
 import { WorkspaceSidebar } from '@/components/workspace/workspace-sidebar'
 import { cn } from '@/lib/utils'
+import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
   head: () => ({
@@ -97,6 +97,10 @@ function RootComponent() {
   return (
     <WorkspaceProvider>
       <div className="animate-in fade-in flex h-svh p-3 duration-300">
+        <div
+          aria-hidden
+          className="pointer-events-none fixed inset-0 bg-[url(/bg-pattern.svg)] mask-linear-340 mask-linear-from-30% bg-size-[400px] bg-center bg-repeat opacity-[0.04] dark:opacity-[0.04] dark:invert"
+        />
         <WorkspaceSidebar />
         <main className="relative flex min-w-0 flex-1 flex-col">
           <AgentTitleBar />

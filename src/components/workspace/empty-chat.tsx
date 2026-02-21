@@ -1,7 +1,7 @@
-import { AGENT_SUGGESTIONS } from './agents'
-import type { Agent } from './agents'
 import { PromptSuggestion } from '@/components/prompt-kit/prompt-suggestion'
 import { cn } from '@/lib/utils'
+import { AGENT_SUGGESTIONS } from './agents'
+import type { Agent } from './agents'
 
 const SUGGESTION_COLORS = [
   { card: 'hover:text-rose-500', icon: 'group-hover:text-rose-500' },
@@ -54,7 +54,7 @@ export function EmptyChat({ agent, onSuggestionClick }: EmptyChatProps) {
                 size="default"
                 onClick={() => onSuggestionClick(text)}
                 className={cn(
-                  'group text-foreground/70 bg-muted/30 h-auto flex-col items-start gap-2 rounded-lg p-3 text-left text-sm',
+                  'group text-foreground/70 h-auto flex-col items-start gap-2 rounded-lg border bg-gray-50 p-3 text-left text-sm inset-shadow-2xs inset-shadow-white shadow-xs',
                   color.card,
                 )}
               >

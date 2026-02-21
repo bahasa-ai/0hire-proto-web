@@ -11,7 +11,7 @@ export function WorkspaceSidebar() {
   return (
     <aside
       style={{ viewTransitionName: 'sidebar' }}
-      className="flex h-full w-60 shrink-0 flex-col overflow-hidden rounded-xl border shadow-2xl shadow-gray-200"
+      className="flex h-full w-60 shrink-0 flex-col overflow-hidden rounded-xl border shadow-2xl shadow-gray-200 bg-background"
     >
       <button
         type="button"

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { getAgentTasks, useWorkspace } from './workspace-context'
 import type { Task } from './tasks'
 import type { AgentStep } from './workspace-context'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 
 const CARD_H = 36
@@ -10,30 +11,18 @@ const COLLAPSED_OFFSET = 7
 const SCALE_STEP = 0.04
 const EXPANDED_GAP = 6
 const STEP_ROW_H = 26
-const STEP_BOTTOM_PAD = 8
+const STEP_BOTTOM_PAD = 12
 const MAX_VISIBLE = 3
 const EASING = 'cubic-bezier(0.16, 1, 0.3, 1)'
-
-const RESTING_Y: Record<number, number> = { 1: 0, 2: -8 }
-function restingY(count: number): number {
-  return RESTING_Y[count] ?? -12
-}
 
 function collapsedOpacity(index: number): number {
   if (index >= MAX_VISIBLE) return 0
   return 1 - index * 0.15
 }
 
-// Top card height when expanded with steps
-function expandedTopHeight(steps: Array<AgentStep>): number {
+function cardExpandedHeight(steps: Array<AgentStep>): number {
   if (steps.length === 0) return CARD_H
   return CARD_H + steps.length * STEP_ROW_H + STEP_BOTTOM_PAD
-}
-
-// Y position for a card in the expanded stack
-function expandedY(index: number, topH: number): number {
-  if (index === 0) return 0
-  return topH + EXPANDED_GAP + (index - 1) * (CARD_H + EXPANDED_GAP)
 }
 
 type StackStatus = 'running' | 'done' | 'error'
@@ -85,7 +74,7 @@ interface TaskCardProps {
 function TaskCard({ task, steps, showSteps, style }: TaskCardProps) {
   const status = toStackStatus(task)
   const hasSteps = steps.length > 0
-  const cardHeight = showSteps && hasSteps ? expandedTopHeight(steps) : CARD_H
+  const cardHeight = showSteps && hasSteps ? cardExpandedHeight(steps) : CARD_H
 
   // Progress hint for running tasks: "2 / 4"
   const doneCount = steps.filter(s => s.status === 'done').length
@@ -119,7 +108,7 @@ function TaskCard({ task, steps, showSteps, style }: TaskCardProps) {
           </span>
         </div>
 
-        {/* Step list — only rendered for the top card */}
+        {/* Step list */}
         {hasSteps && (
           <div
             className="px-3"
@@ -175,59 +164,74 @@ export function TaskStack({ agentId }: TaskStackProps) {
 
   const count = tasks.length
   const visible = Math.min(count, MAX_VISIBLE)
-  const topTask = tasks[0]
-
-  // Resolve steps for the top task via its linked message
   const agentMessages = state.messages[agentId] ?? []
-  const topSteps: Array<AgentStep> = topTask.messageId
-    ? (agentMessages.find(m => m.id === topTask.messageId)?.steps ?? [])
-    : []
 
-  const topH = expanded ? expandedTopHeight(topSteps) : CARD_H
+  const allSteps: Array<Array<AgentStep>> = tasks.map(task =>
+    task.messageId
+      ? (agentMessages.find(m => m.id === task.messageId)?.steps ?? [])
+      : [],
+  )
+
+  const expandedHeights = allSteps.map(steps => cardExpandedHeight(steps))
+  const totalExpandedHeight =
+    expandedHeights.reduce((sum, h) => sum + h, 0) +
+    Math.max(0, count - 1) * EXPANDED_GAP
 
   const containerHeight = expanded
-    ? topH +
-      (count > 1 ? EXPANDED_GAP + (count - 1) * (CARD_H + EXPANDED_GAP) : 0)
-    : CARD_H + (visible - 1) * COLLAPSED_OFFSET + restingY(count)
+    ? totalExpandedHeight
+    : CARD_H + (visible - 1) * COLLAPSED_OFFSET
 
   return (
     <div className="relative ml-auto h-9 w-[268px] shrink-0">
-      <div
-        className="absolute inset-x-0 top-0 z-20"
+      {/* ScrollArea clamps height so the stack never overlaps the chat input.
+          CSS min() gives the root an explicit height Radix needs to scroll correctly. */}
+      <ScrollArea
+        className="absolute inset-x-0 top-0 z-20 [&_[data-slot=scroll-area-scrollbar]]:hidden"
+        maskHeight={0}
         style={{
-          height: containerHeight,
+          height: `min(${containerHeight}px, calc(100svh - 200px))`,
           transition: `height 400ms ${EASING}`,
         }}
         onMouseEnter={() => setExpanded(true)}
         onMouseLeave={() => setExpanded(false)}
       >
-        {tasks.map((task, index) => {
-          const y = expanded
-            ? expandedY(index, topH)
-            : index * COLLAPSED_OFFSET + restingY(count)
-          const scale = expanded ? 1 : 1 - index * SCALE_STEP
-          const opacity = expanded ? 1 : collapsedOpacity(index)
+        {/* Inner div drives the full animated height for correct scroll range */}
+        <div
+          style={{
+            height: containerHeight,
+            position: 'relative',
+            transition: `height 400ms ${EASING}`,
+          }}
+        >
+          {tasks.map((task, index) => {
+            // Cumulative Y: sum heights of all cards above + gaps
+            let expandedY = 0
+            for (let i = 0; i < index; i++) {
+              expandedY += expandedHeights[i] + EXPANDED_GAP
+            }
 
-          // Only the top card shows steps
-          const steps = index === 0 ? topSteps : []
+            const y = expanded ? expandedY : index * COLLAPSED_OFFSET
+            const scale = expanded ? 1 : 1 - index * SCALE_STEP
+            const opacity = expanded ? 1 : collapsedOpacity(index)
 
-          return (
-            <TaskCard
-              key={task.id}
-              task={task}
-              steps={steps}
-              showSteps={expanded && index === 0}
-              style={{
-                zIndex: count - index,
-                transform: `translateY(${y}px) scale(${scale})`,
-                opacity,
-                transition: `transform 400ms ${EASING}, opacity 400ms ${EASING}`,
-                transformOrigin: 'top center',
-              }}
-            />
-          )
-        })}
-      </div>
+            return (
+              <TaskCard
+                key={task.id}
+                task={task}
+                steps={allSteps[index]}
+                showSteps={expanded}
+                style={{
+                  zIndex: count - index,
+                  transform: `translateY(${y}px) scale(${scale})`,
+                  opacity,
+                  transition: `transform 400ms ${EASING}, opacity 400ms ${EASING}`,
+                  transformOrigin: 'top center',
+                }}
+              />
+            )
+          })}
+        </div>
+      </ScrollArea>
     </div>
   )
 }

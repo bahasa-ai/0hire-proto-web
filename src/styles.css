@@ -312,3 +312,11 @@
     @apply font-sans;
   }
 }
+
+/* Chat scroll container — transparent scrollbar track */
+[role='log']::-webkit-scrollbar-track {
+  background: transparent;
+}
+[role='log'] {
+  scrollbar-color: auto transparent;
+}
