@@ -9,7 +9,10 @@ export function WorkspaceSidebar() {
   const activeId = agentId ?? DEFAULT_AGENT_ID
 
   return (
-    <aside className="flex h-full w-60 shrink-0 flex-col overflow-hidden rounded-xl border shadow-2xl shadow-gray-200">
+    <aside
+      style={{ viewTransitionName: 'sidebar' }}
+      className="flex h-full w-60 shrink-0 flex-col overflow-hidden rounded-xl border shadow-2xl shadow-gray-200"
+    >
       <button
         type="button"
         className={cn(
@@ -18,11 +21,13 @@ export function WorkspaceSidebar() {
           'hover:bg-sidebar-accent',
         )}
       >
-        <div className="bg-primary text-primary-foreground flex size-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold tracking-wide">
-          ZH
-        </div>
+        <img
+          src="/0hire-black-icon.svg"
+          alt="0hire"
+          className="size-6 shrink-0"
+        />
         <span className="text-sidebar-foreground flex-1 truncate text-sm font-semibold">
-          Øhire
+          0hire
         </span>
         <ChevronDown className="text-muted-foreground size-3.5 shrink-0" />
       </button>

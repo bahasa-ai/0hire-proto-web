@@ -1,7 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { AGENT_TASKS, deriveAgentStatus } from './tasks'
 import type { Agent } from './agents'
-import type { AgentStatus } from './tasks'
 import { cn } from '@/lib/utils'
 
 interface AgentChannelItemProps {
@@ -9,23 +7,7 @@ interface AgentChannelItemProps {
   isActive: boolean
 }
 
-function statusDotClass(status: AgentStatus): string | null {
-  switch (status) {
-    case 'working':
-      return 'bg-primary'
-    case 'needs-input':
-      return 'bg-warning'
-    case 'failed':
-      return 'bg-destructive'
-    default:
-      return null
-  }
-}
-
 export function AgentChannelItem({ agent, isActive }: AgentChannelItemProps) {
-  const agentStatus = deriveAgentStatus(AGENT_TASKS[agent.id] ?? [])
-  const dotClass = statusDotClass(agentStatus)
-
   return (
     <div
       className={cn('rounded-xl p-1', isActive && 'bg-muted inset-shadow-sm')}
@@ -43,20 +25,15 @@ export function AgentChannelItem({ agent, isActive }: AgentChannelItemProps) {
       >
         <span
           className={cn(
-            'relative flex size-7 shrink-0 items-center justify-center rounded-full text-xs',
+            'flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full',
             isActive ? 'bg-blue-300' : 'bg-border',
           )}
         >
-          {agent.emoji}
-          {dotClass && (
-            <span
-              className={cn(
-                'absolute -right-0.5 -bottom-0.5 size-2 rounded-full ring-1',
-                'ring-sidebar',
-                dotClass,
-              )}
-            />
-          )}
+          <img
+            src={agent.avatar}
+            alt={agent.name}
+            className="size-full object-cover"
+          />
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm leading-tight font-medium">

@@ -24,13 +24,12 @@ export function EmptyChat({ agent, onSuggestionClick }: EmptyChatProps) {
     <div className="flex flex-1 flex-col justify-end pb-6">
       {/* Agent intro */}
       <div className="mb-6">
-        <div
-          className={cn(
-            'mb-4 flex size-14 items-center justify-center rounded-2xl text-3xl',
-            agent.accentColor,
-          )}
-        >
-          {agent.emoji}
+        <div className="bg-muted mb-4 flex size-14 items-center justify-center overflow-hidden rounded-full">
+          <img
+            src={agent.avatar}
+            alt={agent.name}
+            className="size-full object-cover"
+          />
         </div>
         <h2 className="text-foreground mb-0.5 text-xl font-bold">
           {agent.name}
