@@ -12,13 +12,12 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Streamdown } from 'streamdown'
-import { AGENT_SYSTEM_PROMPTS, type Agent } from './agents'
+import { AgentPlanCard } from './agent-plan-card'
+import { AGENT_SYSTEM_PROMPTS } from './agents'
 import { EmptyChat } from './empty-chat'
-import {
-  getActiveMessages,
-  useWorkspace,
-  type ChatMessage,
-} from './workspace-context'
+import { getAgentSteps, isTaskOriented } from './tool-calls'
+import { getActiveMessages, useWorkspace } from './workspace-context'
+import type { StreamChunk } from '@/server/chat'
 import {
   ChatContainerContent,
   ChatContainerRoot,
@@ -44,9 +43,12 @@ import {
 import { ScrollButton } from '@/components/prompt-kit/scroll-button'
 import { SystemMessage } from '@/components/prompt-kit/system-message'
 import { TextShimmer } from '@/components/prompt-kit/text-shimmer'
-import { Tool, type ToolPart } from '@/components/prompt-kit/tool'
 import { Button } from '@/components/ui/button'
-import { streamChatFn, type StreamChunk } from '@/server/chat'
+import { streamChatFn } from '@/server/chat'
+// eslint-disable-next-line import/order
+import type { Agent } from './agents'
+// eslint-disable-next-line import/order
+import type { AgentStep, ChatMessage } from './workspace-context'
 
 type ChatErrorType = 'rate-limited' | 'network' | 'timeout' | 'generic' | null
 
@@ -74,19 +76,6 @@ function makeMessage(
     agentId,
     timestamp: Date.now(),
     ...extra,
-  }
-}
-
-function toolCallState(
-  status: 'running' | 'done' | 'error',
-): ToolPart['state'] {
-  switch (status) {
-    case 'running':
-      return 'input-streaming'
-    case 'done':
-      return 'output-available'
-    case 'error':
-      return 'output-error'
   }
 }
 
@@ -173,21 +162,8 @@ function AgentBubble({ msg }: MessageBubbleProps) {
             </Reasoning>
           </div>
         )}
-        {msg.toolCalls && msg.toolCalls.length > 0 && (
-          <div className="mb-2">
-            {msg.toolCalls.map(tc => (
-              <Tool
-                key={tc.id}
-                toolPart={{
-                  type: tc.name,
-                  state: toolCallState(tc.status),
-                  input: tc.input,
-                  output: tc.output,
-                  toolCallId: tc.id,
-                }}
-              />
-            ))}
-          </div>
+        {msg.steps && msg.steps.length > 0 && (
+          <AgentPlanCard steps={msg.steps} />
         )}
         <MessageContent className="text-foreground rounded-none bg-transparent p-0 text-sm leading-relaxed">
           <Streamdown
@@ -236,6 +212,11 @@ export function ChatView({ agent }: ChatViewProps) {
     agentId: string
   } | null>(null)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const stepAnimationRef = useRef<{
+    timers: Array<ReturnType<typeof setTimeout>>
+    messageId: string
+    cancelled: boolean
+  } | null>(null)
 
   const messages = getActiveMessages(state, agent.id)
   const isEmpty = messages.length === 0
@@ -251,12 +232,28 @@ export function ChatView({ agent }: ChatViewProps) {
 
   const abortCurrentStream = useCallback(() => {
     clearStreamTimeout()
+
+    // Cancel any in-progress step animation
+    if (stepAnimationRef.current) {
+      const {
+        timers,
+        messageId,
+        cancelled: alreadyCancelled,
+      } = stepAnimationRef.current
+      if (!alreadyCancelled) {
+        timers.forEach(clearTimeout)
+        stepAnimationRef.current.cancelled = true
+        dispatch({ type: 'INTERRUPT_STREAMING', agentId: agent.id, messageId })
+      }
+      stepAnimationRef.current = null
+    }
+
     if (!streamingRef.current) return
     const { generator, messageId, agentId } = streamingRef.current
-    generator.return(undefined)
+    if (typeof generator.return === 'function') generator.return(undefined)
     streamingRef.current = null
     dispatch({ type: 'INTERRUPT_STREAMING', agentId, messageId })
-  }, [dispatch, clearStreamTimeout])
+  }, [dispatch, clearStreamTimeout, agent.id])
 
   // Reset streaming state on agent switch
   useEffect(() => {
@@ -268,28 +265,36 @@ export function ChatView({ agent }: ChatViewProps) {
   useEffect(() => () => abortCurrentStream(), [])
 
   const runStream = useCallback(
-    async (allMessages: Array<ChatMessage>) => {
+    async (allMessages: Array<ChatMessage>, existingMessageId?: string) => {
       const systemPrompt =
         AGENT_SYSTEM_PROMPTS[agent.id] ??
         `You are ${agent.name}, an AI assistant.`
 
       setError(null)
-      setIsWaitingForFirstToken(true)
 
-      // Extended timeout to 60s — tool calls can take up to 30s before yielding text.
+      // Only show the "Thinking" shimmer when creating a new message (no existing shell).
+      if (!existingMessageId) {
+        setIsWaitingForFirstToken(true)
+      }
+
       timeoutRef.current = setTimeout(() => {
         abortCurrentStream()
         setIsWaitingForFirstToken(false)
         setError('timeout')
-      }, 60_000)
+      }, 30_000)
 
       try {
         const generator = await streamChatFn({
-          data: { agentId: agent.id, messages: allMessages, systemPrompt },
+          data: { messages: allMessages, systemPrompt },
         })
 
-        const agentMessageId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
-        let isFirstChunk = true
+        const agentMessageId =
+          existingMessageId ??
+          `${Date.now()}-${Math.random().toString(36).slice(2)}`
+
+        // When existingMessageId is given, the message shell is already dispatched.
+        // Skip the START_STREAMING dispatch on first chunk; go straight to appending.
+        let messageShellCreated = !!existingMessageId
 
         streamingRef.current = {
           generator,
@@ -298,46 +303,9 @@ export function ChatView({ agent }: ChatViewProps) {
         }
 
         for await (const chunk of generator) {
-          if (chunk.type === 'tool_call_start') {
-            if (isFirstChunk) {
-              isFirstChunk = false
-              clearStreamTimeout()
-              setIsWaitingForFirstToken(false)
-
-              // Create the agent message shell with empty content and an empty toolCalls array
-              dispatch({
-                type: 'START_STREAMING',
-                agentId: agent.id,
-                message: makeMessage('agent', '', agent.id, {
-                  id: agentMessageId,
-                  isStreaming: true,
-                  toolCalls: [],
-                }),
-              })
-            }
-
-            dispatch({
-              type: 'APPEND_TOOL_CALL',
-              agentId: agent.id,
-              messageId: agentMessageId,
-              toolCall: {
-                id: chunk.id,
-                name: chunk.name,
-                input: chunk.input,
-                status: 'running',
-              },
-            })
-          } else if (chunk.type === 'tool_call_end') {
-            dispatch({
-              type: 'UPDATE_TOOL_CALL',
-              agentId: agent.id,
-              messageId: agentMessageId,
-              toolCallId: chunk.id,
-              update: { status: 'done', output: chunk.output },
-            })
-          } else if (isFirstChunk) {
-            // First chunk is a text or thinking chunk (no tool call)
-            isFirstChunk = false
+          if (!messageShellCreated) {
+            // First chunk — create the agent message shell
+            messageShellCreated = true
             clearStreamTimeout()
             setIsWaitingForFirstToken(false)
 
@@ -374,6 +342,8 @@ export function ChatView({ agent }: ChatViewProps) {
           }
         }
 
+        // abortCurrentStream() may clear streamingRef.current during iteration — only FINISH if still ours.
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (streamingRef.current?.messageId === agentMessageId) {
           streamingRef.current = null
           dispatch({
@@ -404,7 +374,85 @@ export function ChatView({ agent }: ChatViewProps) {
       })
       setInput('')
 
-      await runStream([...getActiveMessages(state, agent.id), userMessage])
+      const allMessages = [...getActiveMessages(state, agent.id), userMessage]
+
+      if (isTaskOriented(trimmed)) {
+        const agentMessageId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+        const stepLabels = getAgentSteps(agent.id)
+        const steps: Array<AgentStep> = stepLabels.map((label, i) => ({
+          id: `step-${i}`,
+          label,
+          status: 'pending',
+        }))
+
+        // Dispatch agent message shell with all steps in 'pending' state.
+        dispatch({
+          type: 'START_STREAMING',
+          agentId: agent.id,
+          message: makeMessage('agent', '', agent.id, {
+            id: agentMessageId,
+            isStreaming: true,
+            steps,
+          }),
+        })
+
+        // Register animation state for abort/cleanup.
+        const animState = {
+          timers: [] as Array<ReturnType<typeof setTimeout>>,
+          messageId: agentMessageId,
+          cancelled: false,
+        }
+        stepAnimationRef.current = animState
+
+        const STAGGER_MS = 600
+
+        // Mark first step 'running' immediately.
+        dispatch({
+          type: 'UPDATE_STEP',
+          agentId: agent.id,
+          messageId: agentMessageId,
+          stepId: steps[0].id,
+          update: { status: 'running' },
+        })
+
+        // Staggered step completion: each step goes 'done', next goes 'running'.
+        steps.forEach((step, i) => {
+          const timer = setTimeout(
+            () => {
+              if (animState.cancelled) return
+              dispatch({
+                type: 'UPDATE_STEP',
+                agentId: agent.id,
+                messageId: agentMessageId,
+                stepId: step.id,
+                update: { status: 'done' },
+              })
+              if (i + 1 < steps.length) {
+                dispatch({
+                  type: 'UPDATE_STEP',
+                  agentId: agent.id,
+                  messageId: agentMessageId,
+                  stepId: steps[i + 1].id,
+                  update: { status: 'running' },
+                })
+              }
+            },
+            STAGGER_MS * (i + 1),
+          )
+          animState.timers.push(timer)
+        })
+
+        // Start streaming after all steps complete.
+        const totalMs = STAGGER_MS * steps.length
+        const streamTimer = setTimeout(() => {
+          if (animState.cancelled) return
+          stepAnimationRef.current = null
+          void runStream(allMessages, agentMessageId)
+        }, totalMs + 100)
+        animState.timers.push(streamTimer)
+      } else {
+        await runStream(allMessages)
+      }
     },
     [agent.id, dispatch, isPending, state, runStream],
   )
@@ -434,11 +482,17 @@ export function ChatView({ agent }: ChatViewProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {isEmpty ? (
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4">
+        <div
+          style={{ viewTransitionName: 'agent-content' }}
+          className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4"
+        >
           <EmptyChat agent={agent} onSuggestionClick={handleSend} />
         </div>
       ) : (
-        <ChatContainerRoot className="relative min-h-0 flex-1">
+        <ChatContainerRoot
+          style={{ viewTransitionName: 'agent-content' }}
+          className="relative min-h-0 flex-1"
+        >
           <ChatContainerContent className="px-2 pt-20 pb-4">
             {messages.map(msg =>
               msg.role === 'user' ? (
@@ -460,7 +514,7 @@ export function ChatView({ agent }: ChatViewProps) {
         </ChatContainerRoot>
       )}
 
-      <div className="relative">
+      <div style={{ viewTransitionName: 'chat-input' }} className="relative">
         <div className="mx-auto w-full max-w-[810px] pb-4">
           {error && (
             <div className="absolute right-4 bottom-full left-4 pb-2">

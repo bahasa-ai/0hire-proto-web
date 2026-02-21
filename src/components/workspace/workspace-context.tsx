@@ -1,12 +1,10 @@
 import { createContext, useContext, useReducer } from 'react'
 import type { Dispatch, ReactNode } from 'react'
 
-export interface ToolCall {
+export interface AgentStep {
   id: string
-  name: string
-  input: Record<string, unknown>
-  output?: Record<string, unknown>
-  status: 'running' | 'done' | 'error'
+  label: string
+  status: 'pending' | 'running' | 'done' | 'error'
 }
 
 export interface ChatMessage {
@@ -20,7 +18,7 @@ export interface ChatMessage {
   feedback?: 'helpful' | 'not-helpful'
   thinking?: string
   isThinking?: boolean
-  toolCalls?: Array<ToolCall>
+  steps?: Array<AgentStep>
 }
 
 interface WorkspaceState {
@@ -51,17 +49,11 @@ type WorkspaceAction =
       feedback: 'helpful' | 'not-helpful'
     }
   | {
-      type: 'APPEND_TOOL_CALL'
+      type: 'UPDATE_STEP'
       agentId: string
       messageId: string
-      toolCall: ToolCall
-    }
-  | {
-      type: 'UPDATE_TOOL_CALL'
-      agentId: string
-      messageId: string
-      toolCallId: string
-      update: Partial<ToolCall>
+      stepId: string
+      update: Partial<Pick<AgentStep, 'status'>>
     }
 
 // -- Helpers --
@@ -140,17 +132,11 @@ function workspaceReducer(
         feedback: action.feedback,
       })
 
-    case 'APPEND_TOOL_CALL':
+    case 'UPDATE_STEP':
       return updateMessage(state, action.agentId, action.messageId, m => ({
         ...m,
-        toolCalls: [...(m.toolCalls ?? []), action.toolCall],
-      }))
-
-    case 'UPDATE_TOOL_CALL':
-      return updateMessage(state, action.agentId, action.messageId, m => ({
-        ...m,
-        toolCalls: m.toolCalls?.map(tc =>
-          tc.id === action.toolCallId ? { ...tc, ...action.update } : tc,
+        steps: m.steps?.map(s =>
+          s.id === action.stepId ? { ...s, ...action.update } : s,
         ),
       }))
 
