@@ -45,8 +45,10 @@ import { SystemMessage } from '@/components/prompt-kit/system-message'
 import { TextShimmer } from '@/components/prompt-kit/text-shimmer'
 import { Button } from '@/components/ui/button'
 import { streamChatFn } from '@/server/chat'
-// eslint-disable-next-line import/order
+// eslint-disable-next-line import/order -- prettier conflicts with ESLint type-import grouping
 import type { Agent } from './agents'
+// eslint-disable-next-line import/order -- prettier conflicts with ESLint type-import grouping
+import type { Task } from './tasks'
 // eslint-disable-next-line import/order
 import type { AgentStep, ChatMessage } from './workspace-context'
 
@@ -59,8 +61,14 @@ const ERROR_MESSAGES: Record<NonNullable<ChatErrorType>, string> = {
   'generic': 'Something went wrong. Try again.',
 }
 
+const STEP_STAGGER_MS = 600
+
 interface ChatViewProps {
   agent: Agent
+}
+
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`
 }
 
 function makeMessage(
@@ -70,7 +78,7 @@ function makeMessage(
   extra?: Partial<ChatMessage>,
 ): ChatMessage {
   return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    id: generateId(),
     role,
     content,
     agentId,
@@ -233,29 +241,24 @@ export function ChatView({ agent }: ChatViewProps) {
   const abortCurrentStream = useCallback(() => {
     clearStreamTimeout()
 
-    // Cancel any in-progress step animation
-    if (stepAnimationRef.current) {
-      const {
-        timers,
-        messageId,
-        cancelled: alreadyCancelled,
-      } = stepAnimationRef.current
-      if (!alreadyCancelled) {
-        timers.forEach(clearTimeout)
-        stepAnimationRef.current.cancelled = true
-        dispatch({ type: 'INTERRUPT_STREAMING', agentId: agent.id, messageId })
-      }
-      stepAnimationRef.current = null
+    if (stepAnimationRef.current && !stepAnimationRef.current.cancelled) {
+      stepAnimationRef.current.timers.forEach(clearTimeout)
+      stepAnimationRef.current.cancelled = true
+      dispatch({
+        type: 'INTERRUPT_STREAMING',
+        agentId: agent.id,
+        messageId: stepAnimationRef.current.messageId,
+      })
     }
+    stepAnimationRef.current = null
 
     if (!streamingRef.current) return
     const { generator, messageId, agentId } = streamingRef.current
-    if (typeof generator.return === 'function') generator.return(undefined)
+    generator.return(undefined)
     streamingRef.current = null
     dispatch({ type: 'INTERRUPT_STREAMING', agentId, messageId })
   }, [dispatch, clearStreamTimeout, agent.id])
 
-  // Reset streaming state on agent switch
   useEffect(() => {
     abortCurrentStream()
     setIsWaitingForFirstToken(false)
@@ -272,7 +275,7 @@ export function ChatView({ agent }: ChatViewProps) {
 
       setError(null)
 
-      // Only show the "Thinking" shimmer when creating a new message (no existing shell).
+      // Skip shimmer when reusing an existing message shell (task-oriented flow)
       if (!existingMessageId) {
         setIsWaitingForFirstToken(true)
       }
@@ -288,12 +291,9 @@ export function ChatView({ agent }: ChatViewProps) {
           data: { messages: allMessages, systemPrompt },
         })
 
-        const agentMessageId =
-          existingMessageId ??
-          `${Date.now()}-${Math.random().toString(36).slice(2)}`
+        const agentMessageId = existingMessageId ?? generateId()
 
-        // When existingMessageId is given, the message shell is already dispatched.
-        // Skip the START_STREAMING dispatch on first chunk; go straight to appending.
+        // When reusing an existing shell, skip START_STREAMING on first chunk
         let messageShellCreated = !!existingMessageId
 
         streamingRef.current = {
@@ -304,7 +304,6 @@ export function ChatView({ agent }: ChatViewProps) {
 
         for await (const chunk of generator) {
           if (!messageShellCreated) {
-            // First chunk — create the agent message shell
             messageShellCreated = true
             clearStreamTimeout()
             setIsWaitingForFirstToken(false)
@@ -342,7 +341,7 @@ export function ChatView({ agent }: ChatViewProps) {
           }
         }
 
-        // abortCurrentStream() may clear streamingRef.current during iteration — only FINISH if still ours.
+        // Ref may be cleared by abortCurrentStream() during async iteration
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (streamingRef.current?.messageId === agentMessageId) {
           streamingRef.current = null
@@ -377,7 +376,8 @@ export function ChatView({ agent }: ChatViewProps) {
       const allMessages = [...getActiveMessages(state, agent.id), userMessage]
 
       if (isTaskOriented(trimmed)) {
-        const agentMessageId = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+        const agentMessageId = generateId()
+        const taskId = generateId()
         const stepLabels = getAgentSteps(agent.id)
         const steps: Array<AgentStep> = stepLabels.map((label, i) => ({
           id: `step-${i}`,
@@ -385,7 +385,18 @@ export function ChatView({ agent }: ChatViewProps) {
           status: 'pending',
         }))
 
-        // Dispatch agent message shell with all steps in 'pending' state.
+        const task: Task = {
+          id: taskId,
+          agentId: agent.id,
+          title: trimmed.length > 70 ? `${trimmed.slice(0, 70)}…` : trimmed,
+          description: 'Requested via chat',
+          status: 'in-progress',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          chatCreated: true,
+        }
+        dispatch({ type: 'ADD_TASK', task })
+
         dispatch({
           type: 'START_STREAMING',
           agentId: agent.id,
@@ -396,7 +407,6 @@ export function ChatView({ agent }: ChatViewProps) {
           }),
         })
 
-        // Register animation state for abort/cleanup.
         const animState = {
           timers: [] as Array<ReturnType<typeof setTimeout>>,
           messageId: agentMessageId,
@@ -404,9 +414,6 @@ export function ChatView({ agent }: ChatViewProps) {
         }
         stepAnimationRef.current = animState
 
-        const STAGGER_MS = 600
-
-        // Mark first step 'running' immediately.
         dispatch({
           type: 'UPDATE_STEP',
           agentId: agent.id,
@@ -415,7 +422,7 @@ export function ChatView({ agent }: ChatViewProps) {
           update: { status: 'running' },
         })
 
-        // Staggered step completion: each step goes 'done', next goes 'running'.
+        // Stagger: mark each step done, then advance the next to running
         steps.forEach((step, i) => {
           const timer = setTimeout(
             () => {
@@ -437,16 +444,21 @@ export function ChatView({ agent }: ChatViewProps) {
                 })
               }
             },
-            STAGGER_MS * (i + 1),
+            STEP_STAGGER_MS * (i + 1),
           )
           animState.timers.push(timer)
         })
 
-        // Start streaming after all steps complete.
-        const totalMs = STAGGER_MS * steps.length
+        const totalMs = STEP_STAGGER_MS * steps.length
         const streamTimer = setTimeout(() => {
           if (animState.cancelled) return
           stepAnimationRef.current = null
+          dispatch({
+            type: 'UPDATE_TASK_STATUS',
+            agentId: agent.id,
+            taskId,
+            status: 'done',
+          })
           void runStream(allMessages, agentMessageId)
         }, totalMs + 100)
         animState.timers.push(streamTimer)

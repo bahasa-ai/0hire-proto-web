@@ -1,6 +1,7 @@
 import { AlertTriangle, Bell, CheckCircle2, Clock, Loader2 } from 'lucide-react'
 import { TaskCard } from './task-card'
-import { AGENT_TASKS, SECTION_ORDER } from './tasks'
+import { SECTION_ORDER } from './tasks'
+import { getAgentTasks, useWorkspace } from './workspace-context'
 import type { LucideIcon } from 'lucide-react'
 import type { Agent } from './agents'
 import type { TaskStatus } from './tasks'
@@ -42,7 +43,8 @@ interface TaskBoardProps {
 }
 
 export function TaskBoard({ agent }: TaskBoardProps) {
-  const tasks = AGENT_TASKS[agent.id] ?? []
+  const { state } = useWorkspace()
+  const tasks = getAgentTasks(state, agent.id)
 
   const sections = SECTION_ORDER.map(status => ({
     status,

@@ -1,5 +1,7 @@
 import { createContext, useContext, useReducer } from 'react'
+import { AGENT_TASKS } from './tasks'
 import type { Dispatch, ReactNode } from 'react'
+import type { AgentTaskMap, Task, TaskStatus } from './tasks'
 
 export interface AgentStep {
   id: string
@@ -23,6 +25,7 @@ export interface ChatMessage {
 
 interface WorkspaceState {
   messages: Record<string, Array<ChatMessage>>
+  tasks: AgentTaskMap
 }
 
 type WorkspaceAction =
@@ -54,6 +57,13 @@ type WorkspaceAction =
       messageId: string
       stepId: string
       update: Partial<Pick<AgentStep, 'status'>>
+    }
+  | { type: 'ADD_TASK'; task: Task }
+  | {
+      type: 'UPDATE_TASK_STATUS'
+      agentId: string
+      taskId: string
+      status: TaskStatus
     }
 
 // -- Helpers --
@@ -140,6 +150,37 @@ function workspaceReducer(
         ),
       }))
 
+    case 'ADD_TASK':
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [action.task.agentId]: [
+            action.task,
+            ...(state.tasks[action.task.agentId] ?? []),
+          ],
+        },
+      }
+
+    case 'UPDATE_TASK_STATUS': {
+      const agentTasks = state.tasks[action.agentId] ?? []
+      return {
+        ...state,
+        tasks: {
+          ...state.tasks,
+          [action.agentId]: agentTasks.map(t =>
+            t.id === action.taskId
+              ? {
+                  ...t,
+                  status: action.status,
+                  updatedAt: new Date().toISOString(),
+                }
+              : t,
+          ),
+        },
+      }
+    }
+
     default:
       return state
   }
@@ -154,6 +195,13 @@ export function getActiveMessages(
   return state.messages[agentId] ?? []
 }
 
+export function getAgentTasks(
+  state: WorkspaceState,
+  agentId: string,
+): Array<Task> {
+  return state.tasks[agentId] ?? []
+}
+
 // -- Context --
 
 interface WorkspaceContextValue {
@@ -163,7 +211,7 @@ interface WorkspaceContextValue {
 
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)
 
-const INITIAL_STATE: WorkspaceState = { messages: {} }
+const INITIAL_STATE: WorkspaceState = { messages: {}, tasks: AGENT_TASKS }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(workspaceReducer, INITIAL_STATE)
