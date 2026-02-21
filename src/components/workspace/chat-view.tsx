@@ -113,7 +113,7 @@ function UserBubble({ msg }: MessageBubbleProps) {
   return (
     <Message className="mx-auto flex w-full max-w-3xl flex-col items-end px-2 py-1">
       <div className="group flex max-w-[65%] flex-col items-end gap-1">
-        <p className="text-muted-foreground text-[11px]">
+        <p className="text-muted-foreground text-[11px] opacity-0 transition-opacity duration-150 group-hover:opacity-100">
           {formatTime(msg.timestamp)}
         </p>
         <MessageContent className="bg-muted text-foreground rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm leading-relaxed">
@@ -145,7 +145,7 @@ function AgentBubble({ msg }: MessageBubbleProps) {
   return (
     <Message className="mx-auto flex w-full max-w-3xl flex-col px-2 py-1.5">
       <div className="group min-w-0">
-        <div className="mb-0.5 flex items-baseline gap-2">
+        <div className="mb-0.5 flex items-baseline gap-2 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
           <span className="text-muted-foreground text-[11px]">
             {formatTime(msg.timestamp)}
           </span>
