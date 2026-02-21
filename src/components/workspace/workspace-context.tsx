@@ -21,6 +21,7 @@ export interface ChatMessage {
   thinking?: string
   isThinking?: boolean
   steps?: Array<AgentStep>
+  taskTitle?: string
 }
 
 interface WorkspaceState {
@@ -56,7 +57,7 @@ type WorkspaceAction =
       agentId: string
       messageId: string
       stepId: string
-      update: Partial<Pick<AgentStep, 'status'>>
+      status: AgentStep['status']
     }
   | { type: 'ADD_TASK'; task: Task }
   | {
@@ -70,6 +71,7 @@ type WorkspaceAction =
       agentId: string
       messageId: string
       steps: Array<AgentStep>
+      taskTitle?: string
     }
 
 // -- Helpers --
@@ -152,13 +154,14 @@ function workspaceReducer(
       return updateMessage(state, action.agentId, action.messageId, m => ({
         ...m,
         steps: m.steps?.map(s =>
-          s.id === action.stepId ? { ...s, ...action.update } : s,
+          s.id === action.stepId ? { ...s, status: action.status } : s,
         ),
       }))
 
     case 'SET_STEPS':
       return updateMessage(state, action.agentId, action.messageId, {
         steps: action.steps,
+        taskTitle: action.taskTitle,
       })
 
     case 'ADD_TASK':

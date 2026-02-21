@@ -33,9 +33,19 @@ function AgentStepRow({ step }: { step: AgentStep }) {
   )
 }
 
-export function AgentPlanCard({ steps }: { steps: Array<AgentStep> }) {
+interface AgentPlanCardProps {
+  steps: Array<AgentStep>
+  title?: string
+}
+
+export function AgentPlanCard({ steps, title }: AgentPlanCardProps) {
   return (
     <div className="border-border/60 bg-muted/20 mb-3 rounded-xl border px-3.5 py-2">
+      {title && (
+        <p className="text-foreground/70 pt-0.5 pb-1.5 text-xs font-semibold">
+          {title}
+        </p>
+      )}
       <div className="divide-border/30 divide-y">
         {steps.map(step => (
           <AgentStepRow key={step.id} step={step} />

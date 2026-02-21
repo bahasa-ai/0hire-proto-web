@@ -79,27 +79,17 @@ export const CURRENT_USER = {
   initials: 'AR',
 } as const
 
-export const MOCK_RESPONSES: Record<string, string> = {
-  'chief-of-staff':
-    "Got it — I've added that to your priority list and flagged it across departments. What's the deadline I should be tracking against?",
-  'designer':
-    "Understood. I'll put together a few visual directions for you to react to. Do you have existing brand guidelines, or are we starting from scratch?",
-  'finance':
-    "Noted. I'll pull the relevant figures and prepare a summary report. Would you prefer a monthly or quarterly breakdown?",
-  'legal':
-    "Received. I'll review the applicable requirements and flag anything that needs your attention. Is there a specific jurisdiction or contract type I should focus on first?",
-}
-
 const PLAN_FORMAT = `
 
 **Action plan format:**
 When performing multi-step work (creating documents, drafting content, running analysis, building models, coordinating tasks), begin your response with a plan block in this exact format:
 <plan>
+Short task name (3–6 words)
 First step label
 Second step label
 Third step label
 </plan>
-Use 3–5 steps written as short present-tense verb phrases (e.g. "Reviewing priorities", "Drafting agenda", "Compiling report"). Omit the plan block entirely for simple questions, explanations, or short conversational replies.`
+The first line is a concise task name (e.g. "Draft Q1 Financial Report"). Remaining lines are steps as short present-tense verb phrases (e.g. "Reviewing priorities", "Drafting agenda", "Compiling report"). Use 3–5 steps. Omit the plan block entirely for simple questions, explanations, or short conversational replies.`
 
 export const AGENT_SYSTEM_PROMPTS: Record<string, string> = {
   'chief-of-staff': `You are the Chief of Staff at Lucidly, a Series A RevOps intelligence platform for B2B SaaS companies ($16M raised, Oct 2024 — Andreessen Horowitz). We have 26 employees, $3.1M ARR, ~22 months runway, and are targeting a Series B in about 14 months.

@@ -168,7 +168,7 @@ function AgentBubble({ msg }: MessageBubbleProps) {
           </div>
         )}
         {msg.steps && msg.steps.length > 0 && (
-          <AgentPlanCard steps={msg.steps} />
+          <AgentPlanCard steps={msg.steps} title={msg.taskTitle} />
         )}
         <MessageContent className="text-foreground rounded-none bg-transparent p-0 text-sm leading-relaxed">
           <Streamdown
@@ -293,7 +293,6 @@ export function ChatView({ agent }: ChatViewProps) {
           agentId: agent.id,
         }
 
-        // Creates the agent message shell on the first content arrival
         function createShell(isThinking = false, initialContent = '') {
           if (messageShellCreated) return
           messageShellCreated = true
@@ -310,10 +309,13 @@ export function ChatView({ agent }: ChatViewProps) {
           })
         }
 
-        // Parses <plan>...</plan> from the buffered start of the stream
         function parsePlan(
           buf: string,
-        ): { steps: Array<AgentStep>; remainder: string } | null {
+        ): {
+          title: string
+          steps: Array<AgentStep>
+          remainder: string
+        } | null {
           const closeIdx = buf.indexOf('</plan>')
           if (closeIdx === -1 || !buf.startsWith('<plan>')) return null
           const lines = buf
@@ -321,7 +323,9 @@ export function ChatView({ agent }: ChatViewProps) {
             .split('\n')
             .map(s => s.trim())
             .filter(Boolean)
-          const steps: Array<AgentStep> = lines.map((label, i) => ({
+          if (lines.length < 2) return null
+          const [title, ...stepLabels] = lines
+          const steps: Array<AgentStep> = stepLabels.map((label, i) => ({
             id: `step-${i}`,
             label,
             status: 'pending' as const,
@@ -329,20 +333,18 @@ export function ChatView({ agent }: ChatViewProps) {
           const remainder = buf
             .slice(closeIdx + '</plan>'.length)
             .replace(/^\n+/, '')
-          return { steps, remainder }
+          return { title, steps, remainder }
         }
 
-        // Attaches steps to the message shell and starts the stagger animation
-        function startStepAnimation(steps: Array<AgentStep>) {
+        function startStepAnimation(title: string, steps: Array<AgentStep>) {
           dispatch({
             type: 'SET_STEPS',
             agentId: agent.id,
             messageId: agentMessageId,
             steps,
+            taskTitle: title,
           })
 
-          const userMsg = allMessages.findLast(m => m.role === 'user')
-          const userText = userMsg?.content ?? ''
           const taskId = generateId()
           const now = new Date().toISOString()
           dispatch({
@@ -350,8 +352,7 @@ export function ChatView({ agent }: ChatViewProps) {
             task: {
               id: taskId,
               agentId: agent.id,
-              title:
-                userText.length > 70 ? `${userText.slice(0, 70)}…` : userText,
+              title,
               description: 'Requested via chat',
               status: 'in-progress',
               createdAt: now,
@@ -372,7 +373,7 @@ export function ChatView({ agent }: ChatViewProps) {
             agentId: agent.id,
             messageId: agentMessageId,
             stepId: steps[0].id,
-            update: { status: 'running' },
+            status: 'running',
           })
 
           for (const [i, step] of steps.entries()) {
@@ -384,7 +385,7 @@ export function ChatView({ agent }: ChatViewProps) {
                   agentId: agent.id,
                   messageId: agentMessageId,
                   stepId: step.id,
-                  update: { status: 'done' },
+                  status: 'done',
                 })
                 if (i + 1 < steps.length) {
                   dispatch({
@@ -392,7 +393,7 @@ export function ChatView({ agent }: ChatViewProps) {
                     agentId: agent.id,
                     messageId: agentMessageId,
                     stepId: steps[i + 1].id,
-                    update: { status: 'running' },
+                    status: 'running',
                   })
                 } else {
                   dispatch({
@@ -410,7 +411,6 @@ export function ChatView({ agent }: ChatViewProps) {
           }
         }
 
-        // Buffer text chunks while scanning for a <plan> block at stream start
         let parseState: 'buffering' | 'passthrough' = 'buffering'
         let streamBuffer = ''
 
@@ -442,7 +442,7 @@ export function ChatView({ agent }: ChatViewProps) {
           if (plan) {
             parseState = 'passthrough'
             createShell()
-            startStepAnimation(plan.steps)
+            startStepAnimation(plan.title, plan.steps)
             if (plan.remainder) {
               dispatch({
                 type: 'APPEND_STREAM_CHUNK',
@@ -459,7 +459,6 @@ export function ChatView({ agent }: ChatViewProps) {
           ) {
             parseState = 'passthrough'
             createShell(false, streamBuffer)
-            streamBuffer = ''
           }
         }
 
@@ -514,10 +513,9 @@ export function ChatView({ agent }: ChatViewProps) {
   const handleSubmit = useCallback(() => handleSend(input), [input, handleSend])
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const newFiles = event.target.files
-    if (newFiles) {
-      setFiles(prev => [...prev, ...Array.from(newFiles)])
-    }
+    const added = event.target.files
+    if (!added) return
+    setFiles(prev => [...prev, ...Array.from(added)])
   }
 
   function handleRemoveFile(index: number) {
