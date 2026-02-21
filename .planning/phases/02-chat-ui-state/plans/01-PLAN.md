@@ -283,8 +283,8 @@ Create `src/components/workspace/empty-chat.tsx`.
 
 ```tsx
 import { PromptSuggestion } from '@/components/prompt-kit/prompt-suggestion'
-import type { Agent } from './agents'
 import { AGENT_SUGGESTIONS } from './agents'
+import type { Agent } from './agents'
 
 interface EmptyChatProps {
   agent: Agent
@@ -371,11 +371,11 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { ArrowUp } from 'lucide-react'
 import { useCallback, useState } from 'react'
-import type { Agent } from './agents'
 import { MOCK_RESPONSES } from './agents'
+import type { Agent } from './agents'
 import { EmptyChat } from './empty-chat'
-import type { ChatMessage } from './workspace-context'
 import { useWorkspace } from './workspace-context'
+import type { ChatMessage } from './workspace-context'
 
 interface ChatViewProps {
   agent: Agent

@@ -10,10 +10,10 @@ const EXPANDED_GAP = 6
 const MAX_VISIBLE = 3
 const EASING = 'cubic-bezier(0.16, 1, 0.3, 1)'
 
+// Vertical nudge for the collapsed stack based on total card count
+const RESTING_Y: Record<number, number> = { 1: 0, 2: -8 }
 function restingY(count: number): number {
-  if (count <= 1) return 0
-  if (count === 2) return -8
-  return -12
+  return RESTING_Y[count] ?? -12
 }
 
 type StackStatus = 'running' | 'done' | 'error'
@@ -40,6 +40,11 @@ const PRIORITY: Record<StackStatus, number> = {
   running: 0,
   error: 1,
   done: 2,
+}
+
+function collapsedOpacity(index: number): number {
+  if (index >= MAX_VISIBLE) return 0
+  return 1 - index * 0.15
 }
 
 interface TaskStackProps {
@@ -82,11 +87,7 @@ export function TaskStack({ agentId }: TaskStackProps) {
             ? index * (CARD_H + EXPANDED_GAP)
             : index * COLLAPSED_OFFSET + restingY(count)
           const scale = expanded ? 1 : 1 - index * SCALE_STEP
-          const opacity = expanded
-            ? 1
-            : index >= MAX_VISIBLE
-              ? 0
-              : 1 - index * 0.15
+          const opacity = expanded ? 1 : collapsedOpacity(index)
 
           return (
             <div
