@@ -258,6 +258,35 @@ Plans:
 
 ---
 
+### Phase 10: Agentic Action Plan UI
+
+**Goal:** Replace raw tool call cards with a polished, user-friendly agentic progress panel — a sequenced step list (like Cursor or Claude's task view) that shows planned actions and their live status using mock data. Hides all technical noise (call IDs, raw JSON input/output) in favor of clear, human-readable step names and state icons that a non-technical operator can immediately understand.
+
+**Depends on:** Phase 9
+
+**Key work:**
+
+- Redesign `ToolCallCard` to be a clean "agent step" row: step icon (spinner / check / error), human-readable step label, and optional one-line status note — no call ID, no raw JSON, no collapsible blob
+- Add an `AgentPlanCard` wrapper component that renders a vertical step list (ordered) above the agent's text reply — matches the Cursor/Claude agentic progress pattern
+- Replace the live Gemini function-calling trigger with a mock sequence: keyword detection (e.g. "create", "draft", "build") triggers a pre-scripted per-agent step plan from `tool-calls.ts`; steps animate through `pending → running → done` with ~600ms stagger, no real API calls involved
+- Per-agent step libraries in `tool-calls.ts` — 4–6 realistic, plain-language step sequences per agent role (e.g. Chief of Staff: "Reviewing your calendar", "Drafting agenda", "Sending summary"; Designer: "Searching templates", "Generating mockup", "Exporting assets")
+- Ensure non-task messages show no step cards — just a streamed text reply (keyword detection gate unchanged from Phase 8 logic)
+
+**Plans:**
+
+- [x] 01-PLAN.md — AgentPlanCard + ToolCallCard redesign + mock step sequences
+
+**Success Criteria — All must be TRUE:**
+
+1. Sending a task-oriented message triggers an `AgentPlanCard` with 3–6 ordered step rows above the text reply
+2. Each step row shows only: a status icon (pending / spinner / check / error) and a plain-English label — no call ID, no JSON
+3. Steps animate sequentially: each transitions pending → running → done before the next begins
+4. Different agents show different, role-appropriate step labels drawn from per-agent mock libraries
+5. Non-task messages show no step card — just a streamed text reply
+6. The visual design matches the quality bar of Cursor / Claude's agentic step panel: clean, minimal, readable
+
+---
+
 ## Progress
 
 | Phase                               | Status      | Completed  |
@@ -270,9 +299,10 @@ Plans:
 | 6. Chat History Sidebar             | ✅ Complete | 2026-02-19 |
 | 7. Floating Sidebar Redesign        | ✅ Complete | 2026-02-20 |
 | 8. Pseudo-Tool Calling              | ✅ Complete | 2026-02-20 |
-| 9. Unified Agent Chat               | ⬜ Pending  |            |
+| 9. Unified Agent Chat               | ✅ Complete | 2026-02-20 |
+| 10. Agentic Action Plan UI          | ✅ Complete | 2026-02-21 |
 
-**Execution order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
+**Execution order:** 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10
 
 ---
 

@@ -2,7 +2,7 @@
 
 ## Current Phase
 
-**Phase 9: Unified Agent Chat (Remove Multi-Conversation)** — pending planning.
+**Phase 10: Agentic Action Plan UI** — ✅ Complete.
 
 ## Execution History
 
@@ -16,6 +16,8 @@
 | Phase 6: Chat History Sidebar             | ✅ Complete | 2026-02-19 | Multi-conversation state; sidebar history wired to real messages; rename/delete conversations; new chat button |
 | Phase 7: Floating Sidebar Redesign        | ✅ Complete | 2026-02-20 | Floating sidebar with rounded corners, inset padding, visual separation from main content                      |
 | Phase 8: Pseudo-Tool Calling              | ✅ Complete | 2026-02-20 | Real Gemini function calling; Tool card component; two-turn stream loop; 5-30s fake sleep; 4 agent tools       |
+| Phase 9: Unified Agent Chat               | ✅ Complete | 2026-02-20 | Flat messages per agent; removed multi-conversation state; simplified sidebar and routes                       |
+| Phase 10: Agentic Action Plan UI          | ✅ Complete | 2026-02-21 | AgentPlanCard with step rows; keyword detection; 600ms stagger animation; removed Gemini function-calling      |
 
 ## Key Decisions Log
 
@@ -44,9 +46,9 @@
 
 ## Next Action
 
-Use `/gsd:plan-phase` to create the Phase 9 plan, then `/gsd:execute-phase` to implement it.
+All 10 phases complete. Use `/gsd:verify-work` to validate Phase 10 against success criteria, or `/gsd:audit-milestone` to review the full milestone.
 
 ---
 
-_Last updated: 2026-02-20_
-_Last session: Added Phase 9 — collapse multi-conversation state to single flat chat per agent; remove history accordion, LayoutGroup, new-chat affordances_
+_Last updated: 2026-02-21_
+_Last session: Added Phase 10 — Agentic Action Plan UI; redesign ToolCallCard to hide technical noise, add AgentPlanCard step list with mock sequences, match Cursor/Claude agentic progress UX_
