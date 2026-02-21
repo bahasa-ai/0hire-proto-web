@@ -309,9 +309,7 @@ export function ChatView({ agent }: ChatViewProps) {
           })
         }
 
-        function parsePlan(
-          buf: string,
-        ): {
+        function parsePlan(buf: string): {
           title: string
           steps: Array<AgentStep>
           remainder: string
@@ -358,6 +356,7 @@ export function ChatView({ agent }: ChatViewProps) {
               createdAt: now,
               updatedAt: now,
               chatCreated: true,
+              messageId: agentMessageId,
             },
           })
 

@@ -15,6 +15,7 @@ export interface Task {
   createdAt: string
   updatedAt: string
   chatCreated?: boolean
+  messageId?: string
 }
 
 export type AgentTaskMap = Record<string, Array<Task>>
