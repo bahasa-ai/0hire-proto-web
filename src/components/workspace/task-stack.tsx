@@ -3,8 +3,8 @@ import { useMemo, useState } from 'react'
 import { getAgentTasks, useWorkspace } from './workspace-context'
 import type { Task } from './tasks'
 import type { AgentStep } from './workspace-context'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
+import { ScrollArea } from '@/components/ui/scroll-area'
 
 const CARD_H = 36
 const COLLAPSED_OFFSET = 7

@@ -37,7 +37,7 @@ export const AGENTS: Array<Agent> = [
       'Coordinates priorities, tracks deadlines, and keeps your business running smoothly across every department.',
     emoji: '🧭',
     avatar: '/avatars/chief_of_staff.svg',
-    accentColor: 'bg-chart-2',
+    accentColor: 'bg-muted',
   },
   {
     id: 'designer',
@@ -47,7 +47,7 @@ export const AGENTS: Array<Agent> = [
       'Creates visual assets, refines brand identity, and ensures every customer touchpoint looks intentional.',
     emoji: '🎨',
     avatar: '/avatars/designer.svg',
-    accentColor: 'bg-chart-3',
+    accentColor: 'bg-muted',
   },
   {
     id: 'finance',
@@ -57,7 +57,7 @@ export const AGENTS: Array<Agent> = [
       'Monitors cash flow, prepares reports, and flags financial risks before they become problems.',
     emoji: '📊',
     avatar: '/avatars/finance.svg',
-    accentColor: 'bg-chart-4',
+    accentColor: 'bg-muted',
   },
   {
     id: 'legal',
@@ -67,7 +67,7 @@ export const AGENTS: Array<Agent> = [
       'Reviews contracts, tracks regulatory requirements, and ensures the business stays protected.',
     emoji: '⚖️',
     avatar: '/avatars/legal.svg',
-    accentColor: 'bg-chart-5',
+    accentColor: 'bg-muted',
   },
 ]
 

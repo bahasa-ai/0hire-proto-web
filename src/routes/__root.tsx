@@ -1,23 +1,23 @@
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import {
-  createRootRoute,
   HeadContent,
   Outlet,
   Scripts,
+  createRootRoute,
   useMatches,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import 'streamdown/styles.css'
+import appCss from '../styles.css?url'
 import { AGENTS } from '@/components/workspace/agents'
 import { TaskStack } from '@/components/workspace/task-stack'
 import {
+  WorkspaceProvider,
   getActiveMessages,
   useWorkspace,
-  WorkspaceProvider,
 } from '@/components/workspace/workspace-context'
 import { WorkspaceSidebar } from '@/components/workspace/workspace-sidebar'
 import { cn } from '@/lib/utils'
-import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
   head: () => ({

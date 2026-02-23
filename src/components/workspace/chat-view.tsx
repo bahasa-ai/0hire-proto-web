@@ -105,7 +105,7 @@ interface MessageBubbleProps {
 
 function UserBubble({ msg }: MessageBubbleProps) {
   return (
-    <Message className="mx-auto flex w-full max-w-3xl flex-col items-end px-2 py-1">
+    <Message className="animate-chat-bubble-in mx-auto flex w-full max-w-3xl flex-col items-end px-2 py-1">
       <div className="group flex max-w-[65%] flex-col items-end gap-1">
         <p className="text-muted-foreground text-[11px] opacity-0 transition-opacity duration-150 group-hover:opacity-100">
           {formatTime(msg.timestamp)}
@@ -114,17 +114,17 @@ function UserBubble({ msg }: MessageBubbleProps) {
           {msg.content}
         </MessageContent>
         <MessageActions className="flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-          <MessageAction tooltip="Edit" delayDuration={100}>
+          <MessageAction tooltip="Edit">
             <Button variant="ghost" size="icon" className="rounded-full">
               <Pencil />
             </Button>
           </MessageAction>
-          <MessageAction tooltip="Delete" delayDuration={100}>
+          <MessageAction tooltip="Delete">
             <Button variant="ghost" size="icon" className="rounded-full">
               <Trash />
             </Button>
           </MessageAction>
-          <MessageAction tooltip="Copy" delayDuration={100}>
+          <MessageAction tooltip="Copy">
             <Button variant="ghost" size="icon" className="rounded-full">
               <Copy />
             </Button>
@@ -137,7 +137,7 @@ function UserBubble({ msg }: MessageBubbleProps) {
 
 function AgentBubble({ msg }: MessageBubbleProps) {
   return (
-    <Message className="mx-auto flex w-full max-w-3xl flex-col px-2 py-1.5">
+    <Message className="animate-chat-bubble-in mx-auto flex w-full max-w-3xl flex-col px-2 py-1.5">
       <div className="group min-w-0">
         <div className="mb-0.5 flex items-baseline gap-2 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
           <span className="text-muted-foreground text-[11px]">
@@ -181,17 +181,17 @@ function AgentBubble({ msg }: MessageBubbleProps) {
         </MessageContent>
         {!msg.isStreaming && !msg.interrupted && (
           <MessageActions className="-ml-2.5 flex gap-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-            <MessageAction tooltip="Copy" delayDuration={100}>
+            <MessageAction tooltip="Copy">
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Copy />
               </Button>
             </MessageAction>
-            <MessageAction tooltip="Upvote" delayDuration={100}>
+            <MessageAction tooltip="Upvote">
               <Button variant="ghost" size="icon" className="rounded-full">
                 <ThumbsUp />
               </Button>
             </MessageAction>
-            <MessageAction tooltip="Downvote" delayDuration={100}>
+            <MessageAction tooltip="Downvote">
               <Button variant="ghost" size="icon" className="rounded-full">
                 <ThumbsDown />
               </Button>
@@ -624,11 +624,11 @@ export function ChatView({ agent }: ChatViewProps) {
                 <PromptInputAction tooltip="Stop generating">
                   <Button
                     size="icon"
-                    variant="destructive"
+                    variant="secondary"
                     className="size-8 rounded-full"
                     onClick={abortCurrentStream}
                   >
-                    <Square className="size-3.5" />
+                    <Square className="size-3.5 fill-current" />
                   </Button>
                 </PromptInputAction>
               ) : (

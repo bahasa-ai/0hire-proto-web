@@ -1,3 +1,4 @@
+import React from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Tooltip,
@@ -22,7 +23,7 @@ export type MessageAvatarProps = {
   src: string
   alt: string
   fallback?: string
-  delayMs?: number
+  delay?: number
   className?: string
 }
 
@@ -30,15 +31,13 @@ const MessageAvatar = ({
   src,
   alt,
   fallback,
-  delayMs,
+  delay,
   className,
 }: MessageAvatarProps) => {
   return (
     <Avatar className={cn('h-8 w-8 shrink-0', className)}>
       <AvatarImage src={src} alt={alt} />
-      {fallback && (
-        <AvatarFallback delayMs={delayMs}>{fallback}</AvatarFallback>
-      )}
+      {fallback && <AvatarFallback delay={delay}>{fallback}</AvatarFallback>}
     </Avatar>
   )
 }
@@ -101,7 +100,14 @@ const MessageAction = ({
   return (
     <TooltipProvider>
       <Tooltip {...props}>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipTrigger
+          render={triggerProps =>
+            React.cloneElement(
+              React.Children.only(children) as React.ReactElement,
+              triggerProps,
+            )
+          }
+        />
         <TooltipContent side={side} className={className}>
           {tooltip}
         </TooltipContent>

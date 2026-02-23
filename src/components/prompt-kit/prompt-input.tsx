@@ -113,8 +113,15 @@ function PromptInputTextarea({
   disableAutosize = false,
   ...props
 }: PromptInputTextareaProps) {
-  const { value, setValue, maxHeight, onSubmit, disabled, textareaRef } =
-    usePromptInput()
+  const {
+    value,
+    setValue,
+    maxHeight,
+    onSubmit,
+    disabled,
+    isLoading,
+    textareaRef,
+  } = usePromptInput()
 
   const adjustHeight = (el: HTMLTextAreaElement | null) => {
     if (!el || disableAutosize) return
@@ -150,7 +157,7 @@ function PromptInputTextarea({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      onSubmit?.()
+      if (!isLoading) onSubmit?.()
     }
     onKeyDown?.(e)
   }
@@ -205,12 +212,25 @@ function PromptInputAction({
   return (
     <Tooltip {...props}>
       <TooltipTrigger
-        asChild
         disabled={disabled}
-        onClick={event => event.stopPropagation()}
-      >
-        {children}
-      </TooltipTrigger>
+        render={triggerProps => {
+          const child = React.Children.only(children) as React.ReactElement
+          const mergedProps = {
+            ...triggerProps,
+            onClick: (e: React.MouseEvent) => {
+              e.stopPropagation()
+              ;(triggerProps as { onClick?: (e: unknown) => void }).onClick?.(e)
+              ;(
+                child.props as { onClick?: (e: React.MouseEvent) => void }
+              ).onClick?.(e)
+            },
+          }
+          return React.cloneElement(
+            child,
+            mergedProps as Record<string, unknown>,
+          )
+        }}
+      />
       <TooltipContent side={side} className={className}>
         {tooltip}
       </TooltipContent>
